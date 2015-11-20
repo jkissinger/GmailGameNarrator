@@ -60,16 +60,25 @@ namespace GmailGameNarrator
             UsersResource.MessagesResource.ListRequest request = service.Users.Messages.List("me");
             request.LabelIds = new Google.Apis.Util.Repeatable<string>(new string[] { "UNREAD" });
 
-            IList <Message> msglist = request.Execute().Messages;
-            if (msglist != null && msglist.Count > 0)
+            try
             {
-                foreach (var msg in msglist)
+                IList<Message> msglist = request.Execute().Messages;
+
+                if (msglist != null && msglist.Count > 0)
                 {
-                    messages.Add(GetMessageById(msg.Id));
+                    foreach (var msg in msglist)
+                    {
+                        messages.Add(GetMessageById(msg.Id));
+                    }
                 }
+
+                log.Debug("No unread messages found.");
+            }
+            catch (Exception e)
+            {
+                log.Error("Error retrieving messages list.", e);
             }
 
-            log.Debug("No unread messages found.");
             return messages;
         }
 
@@ -83,7 +92,18 @@ namespace GmailGameNarrator
         {
             log.Debug("Retrieving message with id: " + id);
             UsersResource.MessagesResource.GetRequest r = service.Users.Messages.Get("me", id);
-            Message msg = r.Execute();
+            Message msg;
+
+            try
+            {
+                msg = r.Execute();
+            }
+            catch (Exception e)
+            {
+                log.Error("Error retrieving message with id: " + id, e);
+                return null;
+            }
+
             SimpleMessage simple = new SimpleMessage();
             foreach (var headers in msg.Payload.Headers)
             {
@@ -144,7 +164,7 @@ namespace GmailGameNarrator
             }
             catch (Exception e)
             {
-                log.Error("An error occurred: " + e.Message);
+                log.Error("Error sending message.", e);
             }
 
             return null;
@@ -163,7 +183,7 @@ namespace GmailGameNarrator
             }
             catch (Exception e)
             {
-                log.Error("An error occurred: " + e.Message);
+                log.Error("Error marking message as read.", e);
             }
 
             return null;

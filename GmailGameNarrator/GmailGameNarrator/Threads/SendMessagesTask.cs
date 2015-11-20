@@ -6,50 +6,25 @@ using System.Threading.Tasks;
 
 namespace GmailGameNarrator.Threads
 {
-    class SendMessagesTask
+    class SendMessagesTask : TimerThread
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
-        /// <summary>
-        /// Initializes the timer
-        /// </summary>
-        public TaskState Init()
+        public override String InitMessage
         {
-            int interval = Program.SendMessagesInterval * 1000;
-            log.Info("Initializing SendMessagesTask.  Sending " + Program.SendMessagesBatchSize + " messages every " + Program.SendMessagesInterval + " second(s).");
-            TaskState state = new TaskState();
-            state.TimerCanceled = false;
-            System.Threading.TimerCallback TimerDelegate =
-                new System.Threading.TimerCallback(TimerTask);
-
-            System.Threading.Timer TimerItem =
-                new System.Threading.Timer(TimerDelegate, state, interval, interval);
-
-            state.TimerReference = TimerItem;
-            return state;
-        }
-
-        /// <summary>
-        /// Initializes the timer task.
-        /// The task sends queued messages every time it's triggered by the timer.
-        /// </summary>
-        public static void TimerTask(object StateObj)
-        {
-            TaskState state = (TaskState)StateObj;
-            if (state.TimerCanceled) state.TimerReference.Dispose();
-
-            Start();
+            get { return "Initializing SendMessagesTask.  Sending " + Program.SendMessagesBatchSize + " messages every " + Program.SendMessagesInterval + " second(s)."; }
         }
 
         /// <summary>
         /// Starts sending email messages
         /// </summary>
-        private static void Start()
+        public override void Start()
         {
             //If queue is empty skip this tick
-            if (Program.outgoingQueue.Count == 0) return;
+            if (Program.Backoff) return;
 
-            for (int i = 0; i < Program.SendMessagesBatchSize; i++)
+            int i = 0;
+
+            while (i < Program.SendMessagesBatchSize && Program.outgoingQueue.Count > 0)
             {
                 SimpleMessage outgoing = new SimpleMessage();
                 if (Program.outgoingQueue.TryDequeue(out outgoing))
@@ -75,6 +50,8 @@ namespace GmailGameNarrator.Threads
                 {
                     log.Warn("Attempt to dequeue message failed.");
                 }
+
+                i++;
             }
         }
     }

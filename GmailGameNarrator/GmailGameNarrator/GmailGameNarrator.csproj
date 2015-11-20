@@ -117,8 +117,10 @@
     <Compile Include="Gmail\SimpleMessage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Threads\GmailRequestBackoff.cs" />
     <Compile Include="Threads\SendMessagesTask.cs" />
     <Compile Include="Threads\TaskState.cs" />
+    <Compile Include="Threads\TimerThread.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

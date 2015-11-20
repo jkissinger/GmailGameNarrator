@@ -4,46 +4,21 @@ using System.Collections.Generic;
 
 namespace GmailGameNarrator.Threads
 {
-    class CheckMessagesTask
+    class CheckMessagesTask : TimerThread
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
-        /// <summary>
-        /// Initializes the timer
-        /// </summary>
-        public TaskState Init()
+        public override String InitMessage
         {
-            int interval = Program.CheckMessagesInterval * 1000;
-            log.Info("Initializing CheckMessagesTask.  Checking unread messages every " + Program.CheckMessagesInterval + " second(s).");
-            TaskState state = new TaskState();
-            state.TimerCanceled = false;
-            System.Threading.TimerCallback TimerDelegate =
-                new System.Threading.TimerCallback(TimerTask);
-
-            System.Threading.Timer TimerItem =
-                new System.Threading.Timer(TimerDelegate, state, interval, interval);
-
-            state.TimerReference = TimerItem;
-            return state;
-        }
-
-        /// <summary>
-        /// Initializes the timer task.
-        /// The task checks for email messages every time it's triggered by the timer.
-        /// </summary>
-        public void TimerTask(object StateObj)
-        {
-            TaskState state = (TaskState)StateObj;
-            if (state.TimerCanceled) state.TimerReference.Dispose();
-
-            Start();
+            get { return "Initializing CheckMessagesTask.  Checking unread messages every " + Program.CheckMessagesInterval + " second(s)."; }
         }
 
         /// <summary>
         /// Starts checking email messages
         /// </summary>
-        private void Start()
+        public override void Start()
         {
+            if (Program.Backoff) return;
+
             IList<SimpleMessage> messages = Gmail.GetUnreadMessages();
             if (messages != null && messages.Count > 0)
             {

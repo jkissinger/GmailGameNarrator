@@ -13,6 +13,8 @@ namespace GmailGameNarrator
         public static readonly int SendMessagesInterval = 1;
         public static readonly int SendMessagesBatchSize = 2;
         public static readonly int MaxSendAttempts = 3;
+        public static volatile Boolean Backoff = false;
+        public static volatile Boolean LastRequestState = true;
         public static ConcurrentQueue<SimpleMessage> outgoingQueue = new ConcurrentQueue<SimpleMessage>();
 
         static void Main(string[] args)
@@ -26,10 +28,16 @@ namespace GmailGameNarrator
             SendMessagesTask SendTask = new SendMessagesTask();
             TaskState SendMessagesState = SendTask.Init();
 
+            ///Not implemented because I don't know the syntax for the Gmail API returning
+            ///403 rate limited responses
+            //GmailRequestBackoff BackoffThread = new GmailRequestBackoff();
+            //TaskState BackoffState = BackoffThread.Init();
+
             Console.Read();
 
-            CheckMessagesState.TimerReference.Dispose();
-            SendMessagesState.TimerReference.Dispose();
+            CheckMessagesState.TimerCanceled = true;
+            SendMessagesState.TimerCanceled = true;
+            //BackoffState.TimerCanceled = true;
         }
 
         public static void EnqueueEmail(String to, String subject, String body)
