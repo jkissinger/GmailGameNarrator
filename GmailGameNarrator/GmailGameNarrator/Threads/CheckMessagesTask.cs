@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace GmailGameNarrator
+namespace GmailGameNarrator.Threads
 {
     class CheckMessagesTask
     {
@@ -13,13 +13,15 @@ namespace GmailGameNarrator
         /// </summary>
         public TaskState Init()
         {
+            int interval = Program.CheckMessagesInterval * 1000;
+            log.Info("Initializing CheckMessagesTask.  Checking unread messages every " + Program.CheckMessagesInterval + " second(s).");
             TaskState state = new TaskState();
             state.TimerCanceled = false;
             System.Threading.TimerCallback TimerDelegate =
                 new System.Threading.TimerCallback(TimerTask);
 
             System.Threading.Timer TimerItem =
-                new System.Threading.Timer(TimerDelegate, state, 5000, 5000);
+                new System.Threading.Timer(TimerDelegate, state, interval, interval);
 
             state.TimerReference = TimerItem;
             return state;
@@ -59,7 +61,7 @@ namespace GmailGameNarrator
                         {
                             response = "You are " + RandomResponse();
                         }
-                        Gmail.SendMessage(msg.From, msg.Subject, response);
+                        Program.EnqueueEmail(msg.From, msg.Subject, response);
                     }
                     Gmail.MarkMessageRead(msg.Message.Id);
                 }

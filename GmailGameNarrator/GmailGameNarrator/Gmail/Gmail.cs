@@ -23,7 +23,7 @@ namespace GmailGameNarrator
         /// </summary>
         public static void StartService()
         {
-            log.Debug("Starting Gmail service.");
+            log.Info("Starting Gmail service.");
             UserCredential credential;
 
             using (var stream = new FileStream("client_secret.json", FileMode.Open, FileAccess.Read))
@@ -38,7 +38,7 @@ namespace GmailGameNarrator
                     "user",
                     CancellationToken.None,
                     new FileDataStore(credPath, true)).Result;
-                Console.WriteLine("Credential file saved to: " + credPath);
+                log.Info("Credential file saved to: " + credPath);
             }
 
             service = new GmailService(new BaseClientService.Initializer()
@@ -47,7 +47,7 @@ namespace GmailGameNarrator
                 ApplicationName = ApplicationName,
             });
 
-            log.Debug("Gmail service started.");
+            log.Info("Gmail service started.");
         }
 
         /// <summary>
@@ -68,7 +68,8 @@ namespace GmailGameNarrator
                     messages.Add(GetMessageById(msg.Id));
                 }
             }
-            
+
+            log.Debug("No unread messages found.");
             return messages;
         }
 
@@ -80,6 +81,7 @@ namespace GmailGameNarrator
         /// </returns>
         private static SimpleMessage GetMessageById(String id)
         {
+            log.Debug("Retrieving message with id: " + id);
             UsersResource.MessagesResource.GetRequest r = service.Users.Messages.Get("me", id);
             Message msg = r.Execute();
             SimpleMessage simple = new SimpleMessage();
@@ -142,7 +144,7 @@ namespace GmailGameNarrator
             }
             catch (Exception e)
             {
-                Console.WriteLine("An error occurred: " + e.Message);
+                log.Error("An error occurred: " + e.Message);
             }
 
             return null;
@@ -161,7 +163,7 @@ namespace GmailGameNarrator
             }
             catch (Exception e)
             {
-                Console.WriteLine("An error occurred: " + e.Message);
+                log.Error("An error occurred: " + e.Message);
             }
 
             return null;
