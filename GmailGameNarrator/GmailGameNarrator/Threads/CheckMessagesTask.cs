@@ -1,18 +1,35 @@
-﻿using System;
+﻿using GmailGameNarrator.Threads;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GmailGameNarrator
 {
     class CheckMessagesTask
     {
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        /// <summary>
+        /// Initializes the timer
+        /// </summary>
+        public TaskState Init()
+        {
+            TaskState state = new TaskState();
+            state.TimerCanceled = false;
+            System.Threading.TimerCallback TimerDelegate =
+                new System.Threading.TimerCallback(TimerTask);
+
+            System.Threading.Timer TimerItem =
+                new System.Threading.Timer(TimerDelegate, state, 5000, 5000);
+
+            state.TimerReference = TimerItem;
+            return state;
+        }
+
         /// <summary>
         /// Initializes the timer task.
         /// The task checks for email messages every time it's triggered by the timer.
         /// </summary>
-        public static void TimerTask(object StateObj)
+        public void TimerTask(object StateObj)
         {
             TaskState state = (TaskState)StateObj;
             if (state.TimerCanceled) state.TimerReference.Dispose();
@@ -23,14 +40,14 @@ namespace GmailGameNarrator
         /// <summary>
         /// Starts checking email messages
         /// </summary>
-        private static void Start()
+        private void Start()
         {
-            IList<SimpleMessage> messages = GmailAPI.GetUnreadMessages();
+            IList<SimpleMessage> messages = Gmail.GetUnreadMessages();
             if (messages != null && messages.Count > 0)
             {
                 foreach (SimpleMessage msg in messages)
                 {
-                    Console.WriteLine("Subject: " + msg.Subject + " From: " + msg.From);
+                    log.Debug("Message found: Subject: " + msg.Subject + " From: " + msg.From);
                     if (msg.Subject.Equals("What am I?") || msg.Subject.Equals("Re: What am I?"))
                     {
                         String response = "";
@@ -42,9 +59,9 @@ namespace GmailGameNarrator
                         {
                             response = "You are " + RandomResponse();
                         }
-                        GmailAPI.SendMessage(msg.From, msg.Subject, response);
+                        Gmail.SendMessage(msg.From, msg.Subject, response);
                     }
-                    GmailAPI.MarkMessageRead(msg.Message.Id);
+                    Gmail.MarkMessageRead(msg.Message.Id);
                 }
             }
         }
@@ -52,7 +69,7 @@ namespace GmailGameNarrator
         /// <summary>
         /// Returns a random compliment, if the email has my wife's name in the from field
         /// </summary>
-        private static string Compliment()
+        private string Compliment()
         {
             Random r = new Random();
 
@@ -74,7 +91,7 @@ namespace GmailGameNarrator
         /// <summary>
         /// Returns a random response; ignore my sense of humor
         /// </summary>
-        private static string RandomResponse()
+        private string RandomResponse()
         {
             Random r = new Random();
 

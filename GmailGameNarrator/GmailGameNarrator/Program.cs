@@ -1,26 +1,25 @@
-﻿using System;
+﻿using GmailGameNarrator.Threads;
+using System;
+
+[assembly: log4net.Config.XmlConfigurator(Watch = true)]
 
 namespace GmailGameNarrator
 {
     class Program
     {
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         static void Main(string[] args)
         {
-            GmailAPI.StartService();
+            log.Warn("Initializing program.");
+            Gmail.StartService();
 
-            TaskState state = new TaskState();
-            state.TimerCanceled = false;
-            System.Threading.TimerCallback TimerDelegate =
-                new System.Threading.TimerCallback(CheckMessagesTask.TimerTask);
-
-            System.Threading.Timer TimerItem =
-                new System.Threading.Timer(TimerDelegate, state, 5000, 5000);
-
-            state.TimerReference = TimerItem;
+            CheckMessagesTask CheckTask = new CheckMessagesTask();
+            TaskState CheckMessagesState = CheckTask.Init();
 
             Console.Read();
 
-            TimerItem.Dispose();
+            CheckMessagesState.TimerReference.Dispose();
         }
     }
 }

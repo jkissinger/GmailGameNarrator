@@ -11,8 +11,9 @@ using System.Threading;
 
 namespace GmailGameNarrator
 {
-    class GmailAPI
+    class Gmail
     {
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         static string[] Scopes = { GmailService.Scope.GmailSend, GmailService.Scope.GmailReadonly, GmailService.Scope.GmailModify };
         static string ApplicationName = "Gmail Game Narrator";
         static GmailService service;
@@ -22,6 +23,7 @@ namespace GmailGameNarrator
         /// </summary>
         public static void StartService()
         {
+            log.Debug("Starting Gmail service.");
             UserCredential credential;
 
             using (var stream = new FileStream("client_secret.json", FileMode.Open, FileAccess.Read))
@@ -44,6 +46,8 @@ namespace GmailGameNarrator
                 HttpClientInitializer = credential,
                 ApplicationName = ApplicationName,
             });
+
+            log.Debug("Gmail service started.");
         }
 
         /// <summary>

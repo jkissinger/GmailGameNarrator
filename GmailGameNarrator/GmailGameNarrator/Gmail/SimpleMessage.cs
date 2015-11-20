@@ -21,5 +21,9 @@ namespace GmailGameNarrator
         /// The sender of the message
         /// </summary>
         public String From { get; set; }
+        /// <summary>
+        /// The date time the message was sent
+        /// </summary>
+        public DateTime SentTime { get; set; }
     }
 }
