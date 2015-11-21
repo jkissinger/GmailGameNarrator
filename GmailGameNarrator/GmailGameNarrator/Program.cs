@@ -1,6 +1,6 @@
-﻿using GmailGameNarrator.Threads;
+﻿using GmailGameNarrator.Game;
+using GmailGameNarrator.Threads;
 using System;
-using System.Collections.Concurrent;
 
 [assembly: log4net.Config.XmlConfigurator(Watch = true)]
 
@@ -13,14 +13,16 @@ namespace GmailGameNarrator
         public static readonly int SendMessagesInterval = 1;
         public static readonly int SendMessagesBatchSize = 2;
         public static readonly int MaxSendAttempts = 3;
-        public static volatile Boolean Backoff = false;
-        public static volatile Boolean LastRequestState = true;
-        public static ConcurrentQueue<SimpleMessage> outgoingQueue = new ConcurrentQueue<SimpleMessage>();
+        public static volatile bool Backoff = false;
+        public static volatile bool LastRequestState = true;
 
         static void Main(string[] args)
         {
             log.Info("Initializing program.");
             Gmail.StartService();
+            //Make sure these are instantiated first for thread safety
+            NarratorSystem ns = NarratorSystem.Instance;
+            MessageParser mp = MessageParser.Instance;
 
             CheckMessagesTask CheckTask = new CheckMessagesTask();
             TaskState CheckMessagesState = CheckTask.Init();
@@ -38,16 +40,6 @@ namespace GmailGameNarrator
             CheckMessagesState.TimerCanceled = true;
             SendMessagesState.TimerCanceled = true;
             //BackoffState.TimerCanceled = true;
-        }
-
-        public static void EnqueueEmail(String to, String subject, String body)
-        {
-            SimpleMessage outgoing = new SimpleMessage();
-            outgoing.To = to;
-            outgoing.Subject = subject;
-            outgoing.Body = body;
-            outgoing.SendAttempts = 0;
-            Program.outgoingQueue.Enqueue(outgoing);
         }
     }
 }

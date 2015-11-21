@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace GmailGameNarrator.Game
+﻿namespace GmailGameNarrator.Game
 {
     class Player
     {
+        public string name { get; }
+        public string email { get; }
+
+        public Player(string name, string email)
+        {
+            this.name = name;
+            this.email = email;
+        }
     }
 }

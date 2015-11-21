@@ -1,4 +1,4 @@
-﻿using GmailGameNarrator.Threads;
+﻿using GmailGameNarrator.Game;
 using System;
 using System.Collections.Generic;
 
@@ -7,7 +7,7 @@ namespace GmailGameNarrator.Threads
     class CheckMessagesTask : TimerThread
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        public override String InitMessage
+        public override string InitMessage
         {
             get { return "Initializing CheckMessagesTask.  Checking unread messages every " + Program.CheckMessagesInterval + " second(s)."; }
         }
@@ -27,7 +27,7 @@ namespace GmailGameNarrator.Threads
                     log.Debug("Message found: Subject: " + msg.Subject + " From: " + msg.From);
                     if (msg.Subject.Equals("What am I?") || msg.Subject.Equals("Re: What am I?"))
                     {
-                        String response = "";
+                        string response = "";
                         if (msg.From.IndexOf("alysha", StringComparison.OrdinalIgnoreCase) >= 0)
                         {
                             response = "You are " + Compliment();
@@ -36,9 +36,14 @@ namespace GmailGameNarrator.Threads
                         {
                             response = "You are " + RandomResponse();
                         }
-                        Program.EnqueueEmail(msg.From, msg.Subject, response);
+                        Gmail.EnqueueEmail(msg.From, msg.Subject, response);
+                    }
+                    else
+                    {
+                        MessageParser.Instance.ParseMessage(msg);
                     }
                     Gmail.MarkMessageRead(msg.Message.Id);
+                    log.Info("Message processed: Subject: " + msg.Subject + " From: " + msg.From);
                 }
             }
         }

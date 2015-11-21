@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GmailGameNarrator.Game.Roles
 {
-    class Antagonist : Role
+    abstract class Role
     {
     }
 }

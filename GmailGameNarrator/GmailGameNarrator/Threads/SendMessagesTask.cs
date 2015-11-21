@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace GmailGameNarrator.Threads
+﻿namespace GmailGameNarrator.Threads
 {
     class SendMessagesTask : TimerThread
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        public override String InitMessage
+        public override string InitMessage
         {
             get { return "Initializing SendMessagesTask.  Sending " + Program.SendMessagesBatchSize + " messages every " + Program.SendMessagesInterval + " second(s)."; }
         }
@@ -24,10 +18,10 @@ namespace GmailGameNarrator.Threads
 
             int i = 0;
 
-            while (i < Program.SendMessagesBatchSize && Program.outgoingQueue.Count > 0)
+            while (i < Program.SendMessagesBatchSize && Gmail.outgoingQueue.Count > 0)
             {
                 SimpleMessage outgoing = new SimpleMessage();
-                if (Program.outgoingQueue.TryDequeue(out outgoing))
+                if (Gmail.outgoingQueue.TryDequeue(out outgoing))
                 {
                     log.Info("Sending email " + outgoing.Subject + " to " + outgoing.To);
                     log.Debug("Body: " + outgoing.Body);
@@ -38,7 +32,7 @@ namespace GmailGameNarrator.Threads
                         {
                             log.Warn("Failed to send email " + outgoing.Subject + " to " + outgoing.To + " retrying. Attempt " + outgoing.SendAttempts + ".");
                             log.Debug("Body: " + outgoing.Body);
-                            Program.outgoingQueue.Enqueue(outgoing);
+                            Gmail.outgoingQueue.Enqueue(outgoing);
                         }
                         else
                         {

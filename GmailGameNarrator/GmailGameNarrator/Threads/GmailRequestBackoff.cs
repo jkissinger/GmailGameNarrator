@@ -15,7 +15,7 @@ namespace GmailGameNarrator.Threads
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private static int Failures = 0;
 
-        public override String InitMessage
+        public override string InitMessage
         {
             get { return "Initializing GmailRequestBackoff thread."; }
         }
