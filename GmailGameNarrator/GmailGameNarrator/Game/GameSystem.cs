@@ -142,7 +142,8 @@ namespace GmailGameNarrator.Game
             Gmail.EnqueueMessage(overlord.Address, "Game " + game.Id, "Game " + game.Id + " has been started, you are the Overlord."
                 + "\nHave your friends join by sending a message with the subject \"Game " + game.Id + "\" and body \"Join as <name>\" where <name> is their name."
                 + "\nTo start the game, reply to this message with \"Start\"."
-                + "\nTo cancel, reply to this message with \"Cancel\"");
+                + "\nTo cancel, reply to this message with \"Cancel\""
+                + "\n\n\n" + Program.License);
             log.Info("Started new game: " + game);
         }
 
