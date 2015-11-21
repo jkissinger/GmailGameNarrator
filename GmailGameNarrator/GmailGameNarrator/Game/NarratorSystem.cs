@@ -7,7 +7,6 @@ namespace GmailGameNarrator.Game
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        //These should probably be concurrent collection types?
         private IList<Game> Games = new List<Game>();
         private IList<Player> Players = new List<Player>();
         private IList<Role> Roles = new List<Role>();

@@ -27,6 +27,7 @@ namespace GmailGameNarrator.Game
         {
             string result = "";
             if (message.Subject.Equals("New Game", StringComparison.InvariantCultureIgnoreCase)) result = NewGame(message);
+            if (message.Subject.StartsWith("Game", StringComparison.InvariantCultureIgnoreCase)) result = ParseGameAction(message);
 
             if (!String.IsNullOrEmpty(result)) Gmail.EnqueueEmail(message.From, "Invalid request", result);
         }

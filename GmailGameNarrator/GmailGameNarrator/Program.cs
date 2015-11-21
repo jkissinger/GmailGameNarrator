@@ -13,8 +13,6 @@ namespace GmailGameNarrator
         public static readonly int SendMessagesInterval = 1;
         public static readonly int SendMessagesBatchSize = 2;
         public static readonly int MaxSendAttempts = 3;
-        public static volatile bool Backoff = false;
-        public static volatile bool LastRequestState = true;
 
         static void Main(string[] args)
         {

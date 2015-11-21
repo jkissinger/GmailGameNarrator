@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace GmailGameNarrator.Threads
@@ -10,7 +11,8 @@ namespace GmailGameNarrator.Threads
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public TaskState state;
-        abstract public string InitMessage { get; }
+        abstract protected string InitMessage { get; }
+        protected bool acquiredLock = false;
 
         /// <summary>
         /// Initializes the timer

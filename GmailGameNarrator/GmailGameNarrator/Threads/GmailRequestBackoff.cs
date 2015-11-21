@@ -13,9 +13,11 @@ namespace GmailGameNarrator.Threads
     class GmailRequestBackoff : TimerThread
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly object taskLock = new object();
         private static int Failures = 0;
-
-        public override string InitMessage
+        public static volatile bool Backoff = false;
+        public static volatile bool LastRequestState = true;
+        protected override string InitMessage
         {
             get { return "Initializing GmailRequestBackoff thread."; }
         }
@@ -25,9 +27,22 @@ namespace GmailGameNarrator.Threads
         /// </summary>
         public override void Start()
         {
-            if(Program.Backoff)
+            if (!Monitor.TryEnter(taskLock))
             {
-                if(Program.LastRequestState)
+                log.Warn("GmailRequestBackoff.Start() is in use, skipping execution.");
+                return;
+            }
+
+            CheckBackoff();
+
+            Monitor.Exit(taskLock);
+        }
+
+        private void CheckBackoff()
+        {
+            if (Backoff)
+            {
+                if (LastRequestState)
                 {
                     //Had a failure, but also a success since the last failure, reset failures counter
                     Failures = 0;
@@ -40,9 +55,9 @@ namespace GmailGameNarrator.Threads
                 //Do backoff
                 Wait();
                 //We backed off, reset it
-                Program.Backoff = false;
+                Backoff = false;
                 //Last time was a failure, set the state; note this is the only way LastRequestState can be set to false
-                Program.LastRequestState = false;
+                LastRequestState = false;
 
             }
             //If backoff is false we don't care, either we're waiting for a request to be made and find out the result
@@ -54,8 +69,8 @@ namespace GmailGameNarrator.Threads
             //Exponential delay in seconds, minimum of 1 second
             int delay = (int)Math.Pow(2, Failures);
             Thread.Sleep(delay * 1000);
-            Program.Backoff = false;
-            Program.LastRequestState = false;
+            Backoff = false;
+            LastRequestState = false;
         }
     }
 }

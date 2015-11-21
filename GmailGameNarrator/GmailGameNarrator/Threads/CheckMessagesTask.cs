@@ -1,13 +1,15 @@
 ﻿using GmailGameNarrator.Game;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace GmailGameNarrator.Threads
 {
     class CheckMessagesTask : TimerThread
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        public override string InitMessage
+        private static readonly object taskLock = new object();
+        protected override string InitMessage
         {
             get { return "Initializing CheckMessagesTask.  Checking unread messages every " + Program.CheckMessagesInterval + " second(s)."; }
         }
@@ -17,8 +19,21 @@ namespace GmailGameNarrator.Threads
         /// </summary>
         public override void Start()
         {
-            if (Program.Backoff) return;
+            if (!Monitor.TryEnter(taskLock))
+            {
+                log.Warn("CheckMessagesTask.Start() is in use, skipping execution.");
+                return;
+            }
 
+            if (GmailRequestBackoff.Backoff) return;
+
+            GetUnreadMessages();
+
+            Monitor.Exit(taskLock);
+        }
+
+        private void GetUnreadMessages()
+        {
             IList<SimpleMessage> messages = Gmail.GetUnreadMessages();
             if (messages != null && messages.Count > 0)
             {
