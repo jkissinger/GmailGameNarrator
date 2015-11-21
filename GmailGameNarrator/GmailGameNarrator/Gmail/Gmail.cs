@@ -191,7 +191,7 @@ namespace GmailGameNarrator
             return null;
         }
 
-        public static void EnqueueEmail(string to, string subject, string body)
+        public static void EnqueueMessage(string to, string subject, string body)
         {
             SimpleMessage outgoing = new SimpleMessage();
             outgoing.To = to;

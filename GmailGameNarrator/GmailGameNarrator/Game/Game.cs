@@ -16,6 +16,7 @@ namespace GmailGameNarrator.Game
         {
             this.Id = id;
             this.overlord = overlord;
+            this.players.Add(overlord);
         }
 
         public bool AddPlayer(Player player)
@@ -30,10 +31,9 @@ namespace GmailGameNarrator.Game
 
         public bool IsPlaying(Player player)
         {
-            if (this.overlord.email.Equals(player.email)) return true;
             for (int i=0;i<this.players.Count;i++)
             {
-                if (this.players[i].email.Equals(player.email)) return true;
+                if (this.players[i].address.Equals(player.address)) return true;
             }
             return false;
         }

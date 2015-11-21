@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace GmailGameNarrator.Game
 {
-    class NarratorSystem
+    class GameSystem
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -11,18 +11,18 @@ namespace GmailGameNarrator.Game
         private IList<Player> Players = new List<Player>();
         private IList<Role> Roles = new List<Role>();
 
-        private static NarratorSystem instance;
+        private static GameSystem instance;
 
-        private NarratorSystem() { }
+        private GameSystem() { }
 
-        public static NarratorSystem Instance
+        public static GameSystem Instance
         {
             get
             {
                 if (instance == null)
                 {
-                    log.Info("Initializing NarratorSystem instance.");
-                    instance = new NarratorSystem();
+                    log.Info("Initializing GameSystem instance.");
+                    instance = new GameSystem();
                 }
                 return instance;
             }
@@ -33,10 +33,11 @@ namespace GmailGameNarrator.Game
             if (GetGameByPlayer(overlord) != null) return null;
             Game game = new Game(this.Games.Count, overlord);
             this.Games.Add(game);
-            Gmail.EnqueueEmail(overlord.email, "Game " + game.Id, "Game " + game.Id + " has been started, you are the Overlord."
+            Gmail.EnqueueMessage(overlord.address, "Game " + game.Id, "Game " + game.Id + " has been started, you are the Overlord."
                 + "\nHave your friends join by sending an email with the subject \"Game " + game.Id + "\" and their name in the body to me."
                 + "\nTo start the game, reply to this message with \"Start\"."
                 + "\nTo cancel, reply to this message with \"Cancel\"");
+            this.Players.Add(overlord);
             return game;
         }
 
@@ -58,6 +59,16 @@ namespace GmailGameNarrator.Game
                 if (g.IsPlaying(player)) game = g;
             }
             return game;
+        }
+
+        public Player GetPlayerByAddress(string address)
+        {
+            Player player = null;
+            foreach(Player p in Players)
+            {
+                if (p.address.Equals(address)) player = p;
+            }
+            return player;
         }
 
 

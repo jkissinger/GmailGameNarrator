@@ -19,7 +19,7 @@ namespace GmailGameNarrator
             log.Info("Initializing program.");
             Gmail.StartService();
             //Make sure these are instantiated first for thread safety
-            NarratorSystem ns = NarratorSystem.Instance;
+            GameSystem ns = GameSystem.Instance;
             MessageParser mp = MessageParser.Instance;
 
             CheckMessagesTask CheckTask = new CheckMessagesTask();

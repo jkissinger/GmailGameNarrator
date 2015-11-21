@@ -109,7 +109,7 @@
   <ItemGroup>
     <Compile Include="Game\Game.cs" />
     <Compile Include="Game\MessageParser.cs" />
-    <Compile Include="Game\NarratorSystem.cs" />
+    <Compile Include="Game\GameSystem.cs" />
     <Compile Include="Game\Player.cs" />
     <Compile Include="Game\Roles\Antagonist.cs" />
     <Compile Include="Game\Roles\Civilian.cs" />
@@ -123,6 +123,7 @@
     <Compile Include="Threads\SendMessagesTask.cs" />
     <Compile Include="Threads\TaskState.cs" />
     <Compile Include="Threads\TimerThread.cs" />
+    <Compile Include="StringX.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

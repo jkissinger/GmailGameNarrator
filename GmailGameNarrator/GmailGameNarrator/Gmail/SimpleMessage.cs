@@ -37,7 +37,7 @@ namespace GmailGameNarrator
         /// </summary>
         public int SendAttempts { get; internal set; }
 
-        public string FromEmailAddress()
+        public string FromAddress()
         {
             string email = From;
             try
@@ -55,7 +55,17 @@ namespace GmailGameNarrator
         public List<string> BodyAsLines()
         {
             string body = Body.Replace('\r'.ToString(), string.Empty);
-            return new List<string>(body.Split('\n'));
+            List<string> lines = new List<string>();
+            foreach(string l in body.Split('\n'))
+            {
+                lines.Add(l.Trim().ToLowerInvariant());
+            }
+            return new List<string>();
+        }
+
+        public string NiceSubject()
+        {
+            return Subject.Trim().ToLowerInvariant();
         }
     }
 }

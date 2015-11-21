@@ -51,7 +51,7 @@ namespace GmailGameNarrator.Threads
                         {
                             response = "You are " + RandomResponse();
                         }
-                        Gmail.EnqueueEmail(msg.From, msg.Subject, response);
+                        Gmail.EnqueueMessage(msg.From, msg.Subject, response);
                     }
                     else
                     {

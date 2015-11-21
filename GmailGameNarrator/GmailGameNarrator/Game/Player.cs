@@ -3,12 +3,12 @@
     class Player
     {
         public string name { get; }
-        public string email { get; }
+        public string address { get; }
 
-        public Player(string name, string email)
+        public Player(string name, string address)
         {
             this.name = name;
-            this.email = email;
+            this.address = address.Trim().ToLowerInvariant();
         }
     }
 }
