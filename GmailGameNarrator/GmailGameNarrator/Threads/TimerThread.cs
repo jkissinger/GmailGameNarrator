@@ -10,8 +10,9 @@ namespace GmailGameNarrator.Threads
     abstract class TimerThread
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        public TaskState state;
+        public TaskState State { get; set; }
         abstract protected string InitMessage { get; }
+
         protected bool acquiredLock = false;
 
         /// <summary>
@@ -23,11 +24,9 @@ namespace GmailGameNarrator.Threads
             log.Info(InitMessage);
             TaskState state = new TaskState();
             state.TimerCanceled = false;
-            System.Threading.TimerCallback TimerDelegate =
-                new System.Threading.TimerCallback(TimerTask);
+            TimerCallback TimerDelegate = new TimerCallback(TimerTask);
 
-            System.Threading.Timer TimerItem =
-                new System.Threading.Timer(TimerDelegate, state, interval, interval);
+            Timer TimerItem = new Timer(TimerDelegate, state, interval, interval);
 
             state.TimerReference = TimerItem;
             return state;
@@ -38,10 +37,17 @@ namespace GmailGameNarrator.Threads
         /// </summary>
         public void TimerTask(object StateObj)
         {
-            this.state = (TaskState)StateObj;
-            if (state.TimerCanceled) state.TimerReference.Dispose();
+            State = (TaskState)StateObj;
+            if (State.TimerCanceled) State.TimerReference.Dispose();
 
-            Start();
+            try
+            {
+                Start();
+            }
+            catch (Exception e)
+            {
+                log.Error("Task had an error.", e);
+            }
         }
 
         public abstract void Start();

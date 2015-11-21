@@ -15,7 +15,7 @@ namespace GmailGameNarrator.Threads
         }
 
         /// <summary>
-        /// Starts checking email messages
+        /// Starts checking messages
         /// </summary>
         public override void Start()
         {
@@ -64,7 +64,7 @@ namespace GmailGameNarrator.Threads
         }
 
         /// <summary>
-        /// Returns a random compliment, if the email has my wife's name in the from field
+        /// Returns a random compliment, if the message has my wife's name in the from field
         /// </summary>
         private string Compliment()
         {

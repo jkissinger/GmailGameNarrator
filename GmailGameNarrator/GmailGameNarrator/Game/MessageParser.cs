@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace GmailGameNarrator.Game
 {
@@ -25,81 +26,97 @@ namespace GmailGameNarrator.Game
 
         public void ParseMessage(SimpleMessage message)
         {
-            string result = "";
-            if (message.NiceSubject().Equals("new game")) result = NewGame(message);
-            if (message.NiceSubject().StartsWith("game ") || message.NiceSubject().StartsWith("re: game ")) result = ParseGameAction(message);
+            string subject = message.NiceSubject().Replace("re: ", "");
 
-            if (!String.IsNullOrEmpty(result)) Gmail.EnqueueMessage(message.From, "Invalid request", result);
+            if (subject.Equals("new game"))
+            {
+                DoActions(message, null);
+            }
+            else if(subject.StartsWith("game "))
+            {
+                Game game = GetGameByMessage(message);
+                //Errors are handled by GetGameByMessage above, don't do anything here
+                if(game != null) DoActions(message, game);
+            }
         }
 
-        private string NewGame(SimpleMessage message)
-        {
-            Player overlord;
-            try
-            {
-                string name = message.BodyAsLines()[0];
-                string address = message.FromAddress();
-                overlord = new Player(name, address);
-            }
-            catch (Exception e)
-            {
-                log.Error("Invalid request. ", e);
-                return "Malformed body or message please try again.";
-            }
-            Game newGame = GameSystem.Instance.NewGame(overlord);
-            if (newGame == null)
-            {
-                Game g = GameSystem.Instance.GetGameByPlayer(overlord);
-                return "You are already playing in " + g.overlord.name + "'s game " + g.Id + "  , you may only play one game at a time.";
-            }
-
-            return "";
-        }
-
-        private string ParseGameAction(SimpleMessage message)
+        private Game GetGameByMessage(SimpleMessage message)
         {
             string subject = message.NiceSubject();
-            
+
             int id;
-            try {
+            try
+            {
                 string strId = StringX.GetTextAfter(subject, "game ");
                 id = Int32.Parse(strId);
             }
             catch (Exception e)
             {
-                log.Warn("Malformed subject: " + subject + " from " + message.FromAddress() + " Error: " + e.Message);
-                return "Invalid syntax in your subject, should be \"Game #\" where # is your game id.";
+                HandleBadMessage(message, "Invalid syntax in your subject, should be \"Game #\" where # is your game id.", e);
+                return null;
             }
 
-            GameSystem gameSystem = GameSystem.Instance;
+            Game game = GameSystem.Instance.GetGameById(id);
+            if (game == null)
+            {
+                HandleBadMessage(message, "You referenced an invalid game id: " + id);
+            }
 
+            return game;
+        }
+
+        private void DoActions(SimpleMessage message, Game game)
+        {
+            GameSystem gameSystem = GameSystem.Instance;
             string address = message.FromAddress();
             Player player = gameSystem.GetPlayerByAddress(address);
-            if(player == null)
-            {
-                try
-                {
-                    string name = message.BodyAsLines()[0];
-                    name = StringX.GetTextAfter(name, "join as ");
-                    name = StringX.ToTitleCase(name);
+            List<Action> actions = ParseActions(message);
 
-                    player = new Player(name, address);
-                } catch (Exception e)
+            if (player == null)
+            {
+                gameSystem.JoinGame(address, actions, game);
+            }
+            else
+            {
+                foreach (Action action in actions)
                 {
-                    log.Warn("Malformed request: " + subject + " from " + message.FromAddress() + " Error: " + e.Message);
-                    log.Debug("Body: " + message.Body);
-                    return "Invalid syntax in your message, should be \"join as <name>\" where <name> is your name.";
+                    gameSystem.DoAction(game, player, action);
                 }
-                
             }
+        }
 
-            Game game = gameSystem.GetGameById(id);
-            if(game == null)
+        private List<Action> ParseActions(SimpleMessage message)
+        {
+            List<Action> actions = new List<Action>();
+            foreach (string line in message.BodyAsLines())
             {
-                log.Info("Unimplemented");
+                foreach (var e in Enum.GetValues(typeof(GameSystem.ActionEnum)))
+                {
+                    string eWithSpaces = StringX.AddSpaces(e.ToString());
+                    if (line.Contains(eWithSpaces.ToLowerInvariant()))
+                    {
+                        GameSystem.ActionEnum actionEnum = (GameSystem.ActionEnum)Enum.Parse(typeof(GameSystem.ActionEnum), e.ToString());
+                        string parameter = StringX.GetTextAfter(line, eWithSpaces);
+                        Action action = new Action(actionEnum, parameter);
+                        actions.Add(action);
+                    }
+                }
             }
 
-            return "";
+            return actions;
+        }
+
+        private void HandleBadMessage(SimpleMessage message, string error, Exception e)
+        {
+            log.Warn("Exception thrown when parsing message: " + e.Message);
+            HandleBadMessage(message, error);
+        }
+
+        private void HandleBadMessage(SimpleMessage message, string error)
+        {
+            log.Warn("Malformed request: " + message.Subject + " from " + message.From);
+            log.Debug("Body: " + message.Body);
+            Gmail.EnqueueMessage(message.From, message.Subject, error);
         }
     }
 }

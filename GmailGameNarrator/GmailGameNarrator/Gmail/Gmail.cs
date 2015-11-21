@@ -144,25 +144,25 @@ namespace GmailGameNarrator
             Message msg = new Message();
             string date = DateTime.Now.ToString();
             string from = service.Users.GetProfile("me").UserId;
-            string email = "Date: " + date + "\n" +
+            string message = "Date: " + date + "\n" +
                 "From: " + from + "\n" +
                 "To: " + to + "\n" +
                 "Subject: " + subject + "\n\n" +
                 body;
-            email = Convert.ToBase64String(Encoding.UTF8.GetBytes(email));
-            email = email.Replace('/', '_').Replace('+', '-');
-            msg.Raw = email;
+            message = Convert.ToBase64String(Encoding.UTF8.GetBytes(message));
+            message = message.Replace('/', '_').Replace('+', '-');
+            msg.Raw = message;
             return SendMessage(msg);
         }
 
         /// <summary>
         /// Sends a Message object
         /// </summary>
-        private static Message SendMessage(Message email)
+        private static Message SendMessage(Message message)
         {
             try
             {
-                return service.Users.Messages.Send(email, "me").Execute();
+                return service.Users.Messages.Send(message, "me").Execute();
             }
             catch (Exception e)
             {
@@ -198,7 +198,7 @@ namespace GmailGameNarrator
             outgoing.Subject = subject;
             outgoing.Body = body;
             outgoing.SendAttempts = 0;
-            Gmail.outgoingQueue.Enqueue(outgoing);
+            outgoingQueue.Enqueue(outgoing);
         }
     }
 }

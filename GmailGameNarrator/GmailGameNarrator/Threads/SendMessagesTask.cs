@@ -12,7 +12,7 @@ namespace GmailGameNarrator.Threads
         }
 
         /// <summary>
-        /// Starts sending email messages
+        /// Starts sending messages
         /// </summary>
         public override void Start()
         {
@@ -38,20 +38,20 @@ namespace GmailGameNarrator.Threads
                 SimpleMessage outgoing = new SimpleMessage();
                 if (Gmail.outgoingQueue.TryDequeue(out outgoing))
                 {
-                    log.Info("Sending email " + outgoing.Subject + " to " + outgoing.To);
+                    log.Info("Sending message " + outgoing.Subject + " to " + outgoing.To);
                     log.Debug("Body: " + outgoing.Body);
                     if (Gmail.SendMessage(outgoing.To, outgoing.Subject, outgoing.Body) == null)
                     {
                         outgoing.SendAttempts++;
                         if (outgoing.SendAttempts <= Program.MaxSendAttempts)
                         {
-                            log.Warn("Failed to send email " + outgoing.Subject + " to " + outgoing.To + " retrying. Attempt " + outgoing.SendAttempts + ".");
+                            log.Warn("Failed to send message " + outgoing.Subject + " to " + outgoing.To + " retrying. Attempt " + outgoing.SendAttempts + ".");
                             log.Debug("Body: " + outgoing.Body);
                             Gmail.outgoingQueue.Enqueue(outgoing);
                         }
                         else
                         {
-                            log.Error("Failed to send email " + outgoing.Subject + " to " + outgoing.To + " body " + outgoing.Body + "too many times.  WILL NOT RETRY.");
+                            log.Error("Failed to send message " + outgoing.Subject + " to " + outgoing.To + " body " + outgoing.Body + "too many times.  WILL NOT RETRY.");
                         }
                     }
                 }

@@ -21,7 +21,7 @@ namespace GmailGameNarrator
         /// </summary>
         public string Body { get; set; }
         /// <summary>
-        /// The email address of the sender
+        /// The address of the sender
         /// </summary>
         public string From { get; set; }
         /// <summary>
@@ -29,7 +29,7 @@ namespace GmailGameNarrator
         /// </summary>
         public DateTime SentTime { get; set; }
         /// <summary>
-        /// The message destination email address
+        /// The message destination address
         /// </summary>
         public string To { get; internal set; }
         /// <summary>
@@ -37,19 +37,23 @@ namespace GmailGameNarrator
         /// </summary>
         public int SendAttempts { get; internal set; }
 
+        /// <summary>
+        /// This may be unncessary and could add complications, consider removing and just using From.
+        /// </summary>
+        /// <returns></returns>
         public string FromAddress()
         {
-            string email = From;
+            string address = From;
             try
             {
-                int idx = From.IndexOf('<');
-                email = From.Substring(idx + 1, From.Length - 1 - idx);
+                address = StringX.GetTextAfter(From, "<");
+                address = address.Remove(address.Length - 1);
             }
             catch (Exception e)
             {
-                log.Error("Malformed email address: " + From, e);
+                log.Error("Malformed address: " + From, e);
             }
-            return email;
+            return address.ToLowerInvariant();
         }
 
         public List<string> BodyAsLines()
@@ -58,9 +62,10 @@ namespace GmailGameNarrator
             List<string> lines = new List<string>();
             foreach(string l in body.Split('\n'))
             {
-                lines.Add(l.Trim().ToLowerInvariant());
+                string line = l.Trim().ToLowerInvariant();
+                if(!String.IsNullOrEmpty(line)  && !line.StartsWith(">")) lines.Add(line);
             }
-            return new List<string>();
+            return lines;
         }
 
         public string NiceSubject()

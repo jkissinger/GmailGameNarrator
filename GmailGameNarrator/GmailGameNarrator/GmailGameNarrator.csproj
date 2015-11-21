@@ -107,6 +107,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Game\Action.cs" />
     <Compile Include="Game\Game.cs" />
     <Compile Include="Game\MessageParser.cs" />
     <Compile Include="Game\GameSystem.cs" />

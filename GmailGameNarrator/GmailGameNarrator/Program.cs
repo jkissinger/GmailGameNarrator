@@ -9,11 +9,19 @@ namespace GmailGameNarrator
     class Program
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        public static bool running = true;
         public static readonly int CheckMessagesInterval = 5;
         public static readonly int SendMessagesInterval = 1;
         public static readonly int SendMessagesBatchSize = 2;
         public static readonly int MaxSendAttempts = 3;
 
+        /// <summary>
+        /// Begins the Gmail Game Narrator program.
+        /// </summary>
+        /// <param name="args">Unused</param>
+        /// <remarks>
+        /// The term email is too ambiguous and should not be used, instead use message and address respectively.
+        /// </remarks>
         static void Main(string[] args)
         {
             log.Info("Initializing program.");
@@ -33,7 +41,7 @@ namespace GmailGameNarrator
             //GmailRequestBackoff BackoffThread = new GmailRequestBackoff();
             //TaskState BackoffState = BackoffThread.Init();
 
-            Console.Read();
+            while (running) { };
 
             CheckMessagesState.TimerCanceled = true;
             SendMessagesState.TimerCanceled = true;
