@@ -12,7 +12,7 @@ namespace GmailGameNarrator.Threads
     /// </summary>
     class GmailRequestBackoff : TimerThread
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger("System." + System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly object taskLock = new object();
         private static int Failures = 0;
         public static volatile bool Backoff = false;

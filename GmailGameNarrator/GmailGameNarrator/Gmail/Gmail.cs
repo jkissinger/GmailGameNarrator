@@ -3,10 +3,12 @@ using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
 using Google.Apis.Services;
 using Google.Apis.Util.Store;
+using MimeKit;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Mail;
 using System.Text;
 using System.Threading;
 
@@ -14,7 +16,7 @@ namespace GmailGameNarrator
 {
     class Gmail
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger("System." + System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         static string[] Scopes = { GmailService.Scope.GmailSend, GmailService.Scope.GmailReadonly, GmailService.Scope.GmailModify };
         static string ApplicationName = "Gmail Game Narrator";
         public static ConcurrentQueue<SimpleMessage> outgoingQueue = new ConcurrentQueue<SimpleMessage>();
@@ -141,18 +143,20 @@ namespace GmailGameNarrator
         /// </summary>
         public static Message SendMessage(string to, string subject, string body)
         {
-            Message msg = new Message();
-            string date = DateTime.Now.ToString();
-            string from = service.Users.GetProfile("me").UserId;
-            string message = "Date: " + date + "\n" +
-                "From: " + from + "\n" +
-                "To: " + to + "\n" +
-                "Subject: " + subject + "\n\n" +
-                body;
-            message = Convert.ToBase64String(Encoding.UTF8.GetBytes(message));
-            message = message.Replace('/', '_').Replace('+', '-');
-            msg.Raw = message;
-            return SendMessage(msg);
+            MailAddress toAddress = new MailAddress(to, "");
+            Profile profile = service.Users.GetProfile("me").Execute();
+            string myAddress = profile.EmailAddress;
+            MailAddress fromAddress = new MailAddress(myAddress, "Narrator");
+            MailMessage message = new MailMessage(fromAddress, toAddress);
+            message.Subject = subject;
+            message.Body = body;
+            message.IsBodyHtml = true;
+            MimeMessage mm = MimeMessage.CreateFromMailMessage(message);
+            Message gMsg = new Message();
+            string rawMessage = Convert.ToBase64String(Encoding.UTF8.GetBytes(mm.ToString()));
+            rawMessage = rawMessage.Replace('/', '_').Replace('+', '-');
+            gMsg.Raw = rawMessage;
+            return SendMessage(gMsg);
         }
 
         /// <summary>

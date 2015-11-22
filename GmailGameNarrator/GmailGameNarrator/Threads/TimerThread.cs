@@ -9,7 +9,7 @@ namespace GmailGameNarrator.Threads
 {
     abstract class TimerThread
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger("System." + System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public TaskState State { get; set; }
         abstract protected string InitMessage { get; }
 

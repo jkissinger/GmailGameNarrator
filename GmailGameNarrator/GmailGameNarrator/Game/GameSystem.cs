@@ -6,7 +6,8 @@ namespace GmailGameNarrator.Game
 {
     class GameSystem
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger("System." + System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly log4net.ILog gameLog = log4net.LogManager.GetLogger("Game." + System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         private IList<Game> Games = new List<Game>();
         private IList<Player> Players = new List<Player>();
@@ -20,7 +21,23 @@ namespace GmailGameNarrator.Game
             Quit,
             Status,
             Choose,
-            Vote
+            Vote,
+            Kick,
+            Ban
+        }
+
+        public string Commands(Game game, Player player)
+        {
+            string commands = "<ul>";
+            if (game.IsOverlord(player) && !game.IsInProgress()) commands += "<li>To start the game: <b>Start</b>.</li>";
+            if (game.IsOverlord(player)) commands += "<li>To cancel the game: <b>Cancel</b></li>";
+            if (game.IsOverlord(player)) commands += "<li>To kick a player from the game: <b>Kick</b> <i>name</i></li>";
+            if (game.IsOverlord(player)) commands += "<li>To ban a player from the game: <b>Ban</b> <i>name</i></li>";
+            if (!game.IsOverlord(player)) commands += "<li>To quit the game: <b>Quit</b></li>";
+            commands += "<li>To see the game status: <b>Status</b></li>";
+            commands += "</ul>";
+            commands += "<br />To use a command, reply to this email as indicated above.";
+            return commands;
         }
 
         private static GameSystem instance;
@@ -43,7 +60,7 @@ namespace GmailGameNarrator.Game
         public Game GetGameById(int id)
         {
             Game game = null;
-            foreach(Game g in this.Games)
+            foreach (Game g in this.Games)
             {
                 if (g.Id == id) game = g;
             }
@@ -63,7 +80,7 @@ namespace GmailGameNarrator.Game
         public Player GetPlayerByAddress(string address)
         {
             Player player = null;
-            foreach(Player p in Players)
+            foreach (Player p in Players)
             {
                 if (p.Address.Equals(address)) player = p;
             }
@@ -72,32 +89,89 @@ namespace GmailGameNarrator.Game
 
         public bool DoAction(Game game, Player player, Action action)
         {
-            //Join game is not handled/called here, it's called by messageparser
-            if (action.Name == GameSystem.ActionEnum.Status) Status(player, action, game);
+            if (action.Name == ActionEnum.JoinAs)
+            {
+                //If JoinAs gets hit here, it's only because the player is already playing in a different game
+                Game g = GetGameByPlayer(player);
+                HandleBadAction(g.Title, player, action, "Failed to join " + game.Title + ". You are already playing in " + g.Title + ".");
+            }
+            else if (action.Name == ActionEnum.Status) Status(player, action, game);
+            else if (action.Name == ActionEnum.Cancel) Cancel(player, action, game);
+            else if (action.Name == ActionEnum.Start) Start(player, action, game);
+            else if (action.Name == ActionEnum.Quit) Quit(player, action, game);
+            //if (action.Name == ActionEnum.Kick) Kick(player, action, game);
+            //if (action.Name == ActionEnum.Ban) Ban(player, action, game);
+            //if (action.Name == ActionEnum.Help) Help(player, action, game);
             return false;
         }
 
         public void Status(Player player, Action action, Game game)
         {
-            Gmail.EnqueueMessage(player.Address, "Re: Game " + game.Id, game.Status());
+            gameLog.Info("Sending Status of " + game + " to " + player.Address);
+            gameLog.Debug("Status Message: " + game.Status(player));
+            Gmail.EnqueueMessage(player.Address, "Re: " + game.Title, game.Status(player));
+        }
+
+        public void Cancel(Player player, Action action, Game game)
+        {
+            if (game.IsOverlord(player))
+            {
+                gameLog.Info("Cancelling " + game);
+                RemoveGame(game);
+                Gmail.EnqueueMessage(player.Address, "Re: " + game.Title, game.Title + " has been cancelled.");
+            }
+        }
+
+        public void RemoveGame(Game game)
+        {
+            foreach (Player p in game.Players)
+            {
+                Players.Remove(p);
+            }
+            Games.Remove(game);
+        }
+
+        public void Start(Player player, Action action, Game game)
+        {
+            if (game.IsOverlord(player))
+            {
+                gameLog.Info("Starting " + game);
+                game.Start();
+            }
+        }
+
+        public void Quit(Player player, Action action, Game game)
+        {
+            if (game.IsInProgress())
+            {
+                player.IsAlive = false;
+                Gmail.EnqueueMessage(player.Address, "Re: " + game.Title, "Your character in " + game.Title + ", " + player.Name + " is now dead.");
+                gameLog.Info(player + " is dead because they quit " + game);
+            }
+            else
+            {
+                game.RemovePlayer(player);
+                Gmail.EnqueueMessage(player.Address, "Re: " + game.Title, "You have been removed from " + game);
+                gameLog.Info(player + " is quitting " + game);
+            }
         }
 
         public void JoinGame(string address, List<Action> actions, Game game)
         {
-            foreach(Action action in actions)
+            foreach (Action action in actions)
             {
-                if(action.Name == ActionEnum.JoinAs)
+                if (action.Name == ActionEnum.JoinAs)
                 {
                     Player player = new Player(StringX.ToTitleCase(action.Parameter), address);
-                    if(String.IsNullOrEmpty(player.Name))
+                    if (String.IsNullOrEmpty(player.Name))
                     {
                         if (game == null)
                         {
-                            HandleBadAction("New Game", player, action, "You didn't specify the name you wished to join the game as. To do this reply to this message with \"Join as <name>\" where <name> is your name.");
+                            HandleBadAction("New Game", player, action, "You didn't specify the name you wished to join the game as. To do this reply to this message with \"Join as <i>name</i>\" where <i>name</i> is your name.");
                         }
                         else
                         {
-                            HandleBadAction("Game " + game.Id, player, action, "You didn't specify the name you wished to join the game as. To do this reply to this message with \"Join as <name>\" where <name> is your name.");
+                            HandleBadAction(game.Title, player, action, "You didn't specify the name you wished to join the game as. To do this reply to this message with \"Join as <i>name</i>\" where <i>name</i> is your name.");
                         }
                         return;
                     }
@@ -115,15 +189,25 @@ namespace GmailGameNarrator.Game
             if (game == null) NewGame(player, action);
             else
             {
+                if(game.IsInProgress())
+                {
+                    HandleBadAction(game.Title, player, action, "You cannot join " + game + " because it is in progress.");
+                }
                 if (!game.AddPlayer(player))
                 {
+                    //This probably can't be hit
                     Game g = GetGameByPlayer(player);
-                    HandleBadAction("Game " + game.Id, player, action, "You are already playing in game " + g.Id + ".");
+                    HandleBadAction(game.Title, player, action, "Failed to join " + game.Title + ". You are already playing in " + g.Title + ".");
                 }
                 else
                 {
                     Players.Add(player);
-                    Gmail.EnqueueMessage(player.Address, "Re: Game " + game.Id, "Successfully added you to the game, " + game.Overlord.Name + " is the Overlord.  I will notify you when the game has started.");
+                    Gmail.EnqueueMessage(player.Address, "Re: " + game.Title, "Successfully added you to the game, <b>" + game.Overlord + "</b> is the Overlord.<br />"
+                        + "I will notify you when the game has started."
+                        + "<br /><br />"
+                        + Commands(game, player));
+                    Gmail.EnqueueMessage(game.Overlord.Address, "Re: " + game.Title, "<b>" + player + "</b> has joined " + game.Title);
+                    gameLog.Info("Added player " + player + " to " + game);
                 }
             }
         }
@@ -133,18 +217,20 @@ namespace GmailGameNarrator.Game
             Game game = GetGameByPlayer(overlord);
             if (game != null)
             {
-                HandleBadAction("New Game", overlord, action, "You are already playing in " + game.Overlord.Name + "'s game " + game.Id + "  , you may only play one game at a time.");
+                HandleBadAction("New Game", overlord, action, "You are already playing in " + game + " , you may only play one game at a time.");
                 return;
             }
-            game = new Game(Games.Count, overlord);
+            game = new Game(Properties.Settings.Default.NumGames, overlord);
+            Properties.Settings.Default.NumGames++;
+            Properties.Settings.Default.Save();
             Games.Add(game);
             Players.Add(overlord);
-            Gmail.EnqueueMessage(overlord.Address, "Game " + game.Id, "Game " + game.Id + " has been started, you are the Overlord."
-                + "\nHave your friends join by sending a message with the subject \"Game " + game.Id + "\" and body \"Join as <name>\" where <name> is their name."
-                + "\nTo start the game, reply to this message with \"Start\"."
-                + "\nTo cancel, reply to this message with \"Cancel\""
-                + "\n\n\n" + Program.License);
-            log.Info("Started new game: " + game);
+            Gmail.EnqueueMessage(overlord.Address, game.Title, game.Title + " has been started, you are the <b>Overlord</b>."
+                + "<br /><br />Have your friends join by sending a message with the subject \"" + game.Title + "\" and body \"Join as <i>name</i>\" where <i>name</i> is their name.<br />"
+                + Commands(game, overlord)
+                + "<br /><hr><br />" + Program.License.Replace('\n'.ToString(), "<br />")
+                + "<br /><br />Download this program on " + Program.GitHub);
+            gameLog.Info("Started new game: " + game);
         }
 
         private void HandleBadAction(string subject, Player player, Action action, string error, Exception e)

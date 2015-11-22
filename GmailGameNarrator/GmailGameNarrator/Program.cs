@@ -8,7 +8,7 @@ namespace GmailGameNarrator
 {
     class Program
     {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger("System." + System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public static bool running = true;
         public static readonly int CheckMessagesInterval = 5;
         public static readonly int SendMessagesInterval = 1;
@@ -22,7 +22,8 @@ namespace GmailGameNarrator
             "This program is distributed in the hope that it will be useful,\n" +
             "but WITHOUT ANY WARRANTY; without even the implied warranty of\n" +
             "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the\n" +
-            "GNU General Public License for more details.\n<http://www.gnu.org/licenses/>.";
+            "<a href=http://www.gnu.org/licenses/>GNU General Public License</a> for more details.\n";
+        public static readonly string GitHub = "<a href=http://github.com/jkissinger/GmailGameNarrator>GitHub</a>";
 
         /// <summary>
         /// Begins the Gmail Game Narrator program.
