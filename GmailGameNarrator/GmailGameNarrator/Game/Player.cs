@@ -1,4 +1,7 @@
-﻿using System;
+﻿using GmailGameNarrator.Game.Roles;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace GmailGameNarrator.Game
 {
@@ -8,11 +11,22 @@ namespace GmailGameNarrator.Game
         public string Name { get; }
         public string Address { get; }
         public bool IsAlive { get; set; }
+        public Role Role { get; set; }
+        public Vote DayAction { get; set; }
+        public ReadOnlyCollection<Action> NightActions
+        {
+            get
+            {
+                return new ReadOnlyCollection<Action>(MyNightActions);
+            }
+        }
+        private IList<Action> MyNightActions = new List<Action>();
 
         public Player(string name, string address)
         {
             Name = name;
             Address = address.Trim().ToLowerInvariant();
+            IsAlive = true;
         }
 
         public override string ToString()

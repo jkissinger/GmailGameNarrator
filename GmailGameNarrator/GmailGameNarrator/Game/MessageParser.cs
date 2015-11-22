@@ -65,7 +65,13 @@ namespace GmailGameNarrator.Game
 
             return game;
         }
-
+        /// <summary>
+        /// Processes all actions in the message, calls <see cref="ParseActions(SimpleMessage)"/> to get a list of valid actions.
+        /// Passes each action to <see cref="GameSystem.DoAction(Game, Player, Action)"/>.
+        /// </summary>
+        /// <param name="message">The message to process</param>
+        /// <param name="game">The game the player is playing in</param>
+        /// <seealso cref="ParseActions(SimpleMessage)"/>
         private void DoActions(SimpleMessage message, Game game)
         {
             GameSystem gameSystem = GameSystem.Instance;
@@ -97,7 +103,7 @@ namespace GmailGameNarrator.Game
                     if (line.Contains(eWithSpaces.ToLowerInvariant()))
                     {
                         GameSystem.ActionEnum actionEnum = (GameSystem.ActionEnum)Enum.Parse(typeof(GameSystem.ActionEnum), e.ToString());
-                        string parameter = StringX.GetTextAfter(line, eWithSpaces);
+                        string parameter = StringX.GetTextAfter(line, eWithSpaces).Trim();
                         Action action = new Action(actionEnum, parameter);
                         actions.Add(action);
                     }

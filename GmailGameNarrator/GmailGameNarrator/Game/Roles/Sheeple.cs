@@ -1,15 +1,15 @@
-﻿using GmailGameNarrator.Game.Teams;
-using System;
+﻿using System;
+using GmailGameNarrator.Game.Teams;
 
 namespace GmailGameNarrator.Game.Roles
 {
-    class Antagonist : Role
+    class Sheeple : Role
     {
         public override string Name
         {
             get
             {
-                return "Enlightened";
+                return "Citizen";
             }
         }
 
@@ -33,7 +33,7 @@ namespace GmailGameNarrator.Game.Roles
         {
             get
             {
-                return new AntagonistTeam();
+                return new SheepleTeam();
             }
         }
     }

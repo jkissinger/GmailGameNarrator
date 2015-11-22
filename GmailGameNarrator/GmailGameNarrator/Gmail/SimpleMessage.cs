@@ -63,7 +63,9 @@ namespace GmailGameNarrator
             foreach(string l in body.Split('\n'))
             {
                 string line = l.Trim().ToLowerInvariant();
-                if(!String.IsNullOrEmpty(line)  && !line.StartsWith(">")) lines.Add(line);
+                //Ignore everything after a blank line; we don't want to parse our own messages
+                if(lines.Count > 0 && (String.IsNullOrEmpty(line) || line.StartsWith(">"))) break;
+                lines.Add(line);
             }
             return lines;
         }

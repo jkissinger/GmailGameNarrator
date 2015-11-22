@@ -116,19 +116,25 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Game\Action.cs" />
+    <Compile Include="Game\Actions\Action.cs" />
+    <Compile Include="Game\FlavorText.cs" />
     <Compile Include="Game\Game.cs" />
     <Compile Include="Game\MessageParser.cs" />
     <Compile Include="Game\GameSystem.cs" />
     <Compile Include="Game\Player.cs" />
     <Compile Include="Game\Roles\Antagonist.cs" />
-    <Compile Include="Game\Roles\Civilian.cs" />
-    <Compile Include="Game\Role.cs" />
+    <Compile Include="Game\Roles\Sheeple.cs" />
+    <Compile Include="Game\Roles\Role.cs" />
+    <Compile Include="Game\Teams\Team.cs" />
+    <Compile Include="Game\Teams\AntagonistTeam.cs" />
+    <Compile Include="Game\Teams\SheepleTeam.cs" />
+    <Compile Include="Game\Actions\Vote.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="MathX.cs" />
     <Compile Include="Threads\CheckMessagesTask.cs" />
     <Compile Include="Gmail\Gmail.cs" />
     <Compile Include="Gmail\SimpleMessage.cs" />
