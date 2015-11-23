@@ -36,5 +36,13 @@ namespace GmailGameNarrator.Game.Roles
                 return new SheepleTeam();
             }
         }
+
+        public override string Instructions
+        {
+            get
+            {
+                return "At night, send a message with " + Name.b() + " in the body.  Nothing will happen, but this is to ensure everyone has a night action.";
+            }
+        }
     }
 }

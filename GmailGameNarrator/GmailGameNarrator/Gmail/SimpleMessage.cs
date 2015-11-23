@@ -31,11 +31,11 @@ namespace GmailGameNarrator
         /// <summary>
         /// The message destination address
         /// </summary>
-        public string To { get; internal set; }
+        public string To { get; set; }
         /// <summary>
         /// Number of times the message has been attempted to be sent
         /// </summary>
-        public int SendAttempts { get; internal set; }
+        public int SendAttempts { get; set; }
 
         /// <summary>
         /// This may be unncessary and could add complications, consider removing and just using From.

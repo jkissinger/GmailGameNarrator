@@ -12,7 +12,14 @@ namespace GmailGameNarrator.Game
         public string Address { get; }
         public bool IsAlive { get; set; }
         public Role Role { get; set; }
-        public Vote DayAction { get; set; }
+        public Team Team
+        {
+            get
+            {
+                return Role.Team;
+            }
+        }
+        public Vote Vote { get; set; }
         public ReadOnlyCollection<Action> NightActions
         {
             get
@@ -29,6 +36,35 @@ namespace GmailGameNarrator.Game
             IsAlive = true;
         }
 
+        public bool HaveIWon(Game game)
+        {
+            return Role.HaveIWon(this, game);
+        }
+
+        public string AddNightAction(Action action, Game game)
+        {
+            string result = Role.ValidateAction(this, action, game);
+            if (String.IsNullOrEmpty(result))
+            {
+                MyNightActions.Add(action);
+            }
+            return result;
+        }
+
+        public string DoNightActions(Game game)
+        {
+            string result = Role.DoNightActions(this, game);
+            return result;
+        }
+
+        public void ClearNightActions()
+        {
+            MyNightActions.Clear();
+        }
+
+        //==========================
+        //= Object overrides below =
+        //==========================
         public override string ToString()
         {
             return Address + " playing as " + Name;

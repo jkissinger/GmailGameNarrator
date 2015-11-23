@@ -125,6 +125,7 @@
     <Compile Include="Game\Roles\Antagonist.cs" />
     <Compile Include="Game\Roles\Sheeple.cs" />
     <Compile Include="Game\Roles\Role.cs" />
+    <Compile Include="Game\Summary.cs" />
     <Compile Include="Game\Teams\Team.cs" />
     <Compile Include="Game\Teams\AntagonistTeam.cs" />
     <Compile Include="Game\Teams\SheepleTeam.cs" />

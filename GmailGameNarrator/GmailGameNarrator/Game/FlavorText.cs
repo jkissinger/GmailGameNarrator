@@ -26,16 +26,5 @@ namespace GmailGameNarrator.Game
         }
 
         public static string Divider = "<br /><hr><br />";
-
-        public static string HtmlBulletList(List<string> list)
-        {
-            if (list.Count == 0) return "";
-            string result = "<ul>";
-            foreach (string s in list)
-            {
-                result += "<li>" + s + "</li>";
-            }
-            return result + "</ul>";
-        }
     }
 }

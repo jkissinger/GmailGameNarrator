@@ -129,9 +129,19 @@ namespace GmailGameNarrator.Game
             else if (action.Name == ActionEnum.Quit) Quit(player, action, game);
             else if (action.Name == ActionEnum.Vote) Vote(player, action, game);
             else if (action.Name == ActionEnum.Help) Help(player, action, game);
+            else if (action.Name == ActionEnum.Role) RoleAction(player, action, game);
             //if (action.Name == ActionEnum.Kick) Kick(player, action, game);
             //if (action.Name == ActionEnum.Ban) Ban(player, action, game);
             return false;
+        }
+
+        private void RoleAction(Player player, Action action, Game game)
+        {
+            string result = player.AddNightAction(action, game);
+            if (!String.IsNullOrEmpty(result))
+            {
+                HandleBadAction(game.Subject, player, action, result);
+            }
         }
 
         private void Vote(Player player, Action action, Game game)
@@ -140,13 +150,13 @@ namespace GmailGameNarrator.Game
             {
                 HandleBadAction(game.Subject, player, action, "You can only vote during the day, your vote for <b>" + action.Parameter + "</b> was discarded.");
             }
-            Player candidate = game.GetPlayerByName(action.Parameter);
-            if(candidate == null)
+            Player nominee = game.GetPlayerByName(action.Parameter);
+            if(nominee == null)
             {
                 if (action.Parameter.Equals("no one") || action.Parameter.Equals("nobody"))
                 {
                     Player NoOne = new Player("No one", "nobody");
-                    candidate = NoOne;
+                    nominee = NoOne;
                 }
                 else
                 {
@@ -154,14 +164,14 @@ namespace GmailGameNarrator.Game
                     return;
                 }
             }
-            if(candidate.Equals(player))
+            if(nominee.Equals(player))
             {
                 HandleBadAction(game.Subject, player, action, "You cannot vote for yourself.");
                 return;
             }
-            Vote vote = new Vote(action, candidate);
-            player.DayAction = vote;
-            Gmail.EnqueueMessage(player.Address, game.Subject, "Registered your vote for <b>" + candidate.Name + "</b>.");
+            Vote vote = new Vote(action, nominee);
+            player.Vote = vote;
+            Gmail.EnqueueMessage(player.Address, game.Subject, "Registered your vote for <b>" + nominee.Name + "</b>.");
             game.CheckEndOfCycle();
         }
 
@@ -199,7 +209,7 @@ namespace GmailGameNarrator.Game
                 gameLog.Info("Attempting to start " + game);
                 if(!game.Start())
                 {
-                    HandleBadAction(game.Subject, player, action, "You need at least 3 players to start a game.");
+                    HandleBadAction(game.Subject, player, action, "You need at least 3 players to start a game." + FlavorText.Divider + game.Status());
                 }
             }
         }

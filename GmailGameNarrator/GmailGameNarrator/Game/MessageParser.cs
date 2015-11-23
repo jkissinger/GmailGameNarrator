@@ -33,11 +33,11 @@ namespace GmailGameNarrator.Game
             {
                 DoActions(message, null);
             }
-            else if(subject.StartsWith("game "))
+            else if (subject.StartsWith("game "))
             {
                 Game game = GetGameByMessage(message);
                 //Errors are handled by GetGameByMessage above, don't do anything here
-                if(game != null) DoActions(message, game);
+                if (game != null) DoActions(message, game);
             }
         }
 
@@ -77,7 +77,7 @@ namespace GmailGameNarrator.Game
             GameSystem gameSystem = GameSystem.Instance;
             string address = message.FromAddress();
             Player player = gameSystem.GetPlayerByAddress(address);
-            List<Action> actions = ParseActions(message);
+            List<Action> actions = ParseActions(message, player, game);
 
             if (player == null)
             {
@@ -92,7 +92,7 @@ namespace GmailGameNarrator.Game
             }
         }
 
-        private List<Action> ParseActions(SimpleMessage message)
+        private List<Action> ParseActions(SimpleMessage message, Player player, Game game)
         {
             List<Action> actions = new List<Action>();
             foreach (string line in message.BodyAsLines())
@@ -100,11 +100,21 @@ namespace GmailGameNarrator.Game
                 foreach (var e in Enum.GetValues(typeof(GameSystem.ActionEnum)))
                 {
                     string eWithSpaces = StringX.AddSpaces(e.ToString());
-                    if (line.Contains(eWithSpaces.ToLowerInvariant()))
+                    if (line.StartsWith(eWithSpaces.ToLowerInvariant()))
                     {
                         GameSystem.ActionEnum actionEnum = (GameSystem.ActionEnum)Enum.Parse(typeof(GameSystem.ActionEnum), e.ToString());
-                        string parameter = StringX.GetTextAfter(line, eWithSpaces).Trim();
+                        string parameter = line.GetTextAfter(eWithSpaces).Trim();
                         Action action = new Action(actionEnum, parameter);
+                        actions.Add(action);
+                    }
+                }
+                if (game != null && game.IsInProgress())
+                {
+                    string role = player.Role.Name.ToLowerInvariant();
+                    if (line.StartsWith(role))
+                    {
+                        string parameter = line.GetTextAfter(role).Trim();
+                        Action action = new Action(GameSystem.ActionEnum.Role, parameter);
                         actions.Add(action);
                     }
                 }

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace GmailGameNarrator.Game.Teams
+﻿namespace GmailGameNarrator.Game.Teams
 {
     class SheepleTeam : Team
     {
@@ -12,7 +10,7 @@ namespace GmailGameNarrator.Game.Teams
             }
         }
 
-        public override int MinPercentage
+        public override int MinPercentComposition
         {
             get
             {
@@ -24,6 +22,5 @@ namespace GmailGameNarrator.Game.Teams
         {
             get { return "Town"; }
         }
-
     }
 }

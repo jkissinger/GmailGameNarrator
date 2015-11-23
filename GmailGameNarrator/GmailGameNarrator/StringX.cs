@@ -4,15 +4,15 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GmailGameNarrator.Game;
 
 namespace GmailGameNarrator
 {
-    class StringX
+    public static class StringX
     {
 
-        //Switch to adding string extension?
-        //public static string GetTextAfter(this string str)
-        public static string GetTextAfter(string str, string delimiter)
+        //TODO Switch all of these to string extensions
+        public static string GetTextAfter(this string str, string delimiter)
         {
             delimiter = delimiter.ToLowerInvariant();
             string result = "";
@@ -44,6 +44,37 @@ namespace GmailGameNarrator
                 result = result + c;
             }
             return result.Trim();
+        }
+
+        public static string b(this object obj)
+        {
+            return obj.ToString().b();
+        }
+
+        public static string b(this string str)
+        {
+            return str.tag("b");
+        }
+
+        public static string i(this string str)
+        {
+            return str.tag("i");
+        }
+
+        public static string tag(this string str, string tag)
+        {
+            return "<" + tag + ">" + str + "</" + tag + ">";
+        }
+
+        public static string HtmlBulletList(this List<string> list)
+        {
+            if (list.Count == 0) return "";
+            string result = "<ul>";
+            foreach (string s in list)
+            {
+                result += "<li>" + s + "</li>";
+            }
+            return result + "</ul>";
         }
     }
 }

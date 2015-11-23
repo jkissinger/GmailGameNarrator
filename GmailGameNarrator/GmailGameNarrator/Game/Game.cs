@@ -38,6 +38,8 @@ namespace GmailGameNarrator.Game
             }
         }
         private bool AnonymousVoting = false;
+        //TODO Implement summary functionality
+        private Summary summary = new Summary();
 
         public Game(int id, Player overlord)
         {
@@ -57,9 +59,19 @@ namespace GmailGameNarrator.Game
             MyPlayers.Add(player);
         }
 
-        internal bool RemovePlayer(Player player)
+        public bool RemovePlayer(Player player)
         {
             return MyPlayers.Remove(player);
+        }
+
+        public float getTeamCount(Team team)
+        {
+            int count = 0;
+            foreach(Player p in Players)
+            {
+                if (p.Team.Equals(team)) count++;
+            }
+            return count;
         }
 
         public Player GetPlayerByName(string name)
@@ -81,13 +93,13 @@ namespace GmailGameNarrator.Game
             return false;
         }
 
-        internal bool IsOverlord(Player player)
+        public bool IsOverlord(Player player)
         {
             if (Overlord.Address.Equals(player.Address)) return true;
             return false;
         }
 
-        internal string Status()
+        public string Status()
         {
             string status = "Status of " + Title + ":<br /><ul>"
                 + "<li>In progress: " + (isInProgress ? "Yes</li>" : "No</li>")
@@ -107,6 +119,11 @@ namespace GmailGameNarrator.Game
                 MyCycle = Cycle.Day;
                 RoundCounter++;
             }
+            foreach(Player p in Players)
+            {
+                p.Vote = null;
+                p.ClearNightActions();
+            }
         }
 
         private string ListPlayers()
@@ -121,7 +138,7 @@ namespace GmailGameNarrator.Game
                     if (player.IsAlive)
                     {
                         livingState = " - <b>Alive</b>";
-                        if (ActiveCycle == Cycle.Day && player.DayAction == null)
+                        if (ActiveCycle == Cycle.Day && player.Vote == null)
                         {
                             cycleStatus = " - <b><i>Waiting On Action</i></b>";
                         }
@@ -164,17 +181,32 @@ namespace GmailGameNarrator.Game
             return commands;
         }
 
-        internal bool Start()
+        public bool Start()
         {
             if (Players.Count < 3) return false;
             GameSystem gameSystem = GameSystem.Instance;
-            List<Role> Roles = gameSystem.GetRoles();
-            List<Team> Teams = gameSystem.GetTeams();
-            foreach (Player p in Players)
+            List<Team> teams = gameSystem.GetTeams();
+            List<Role> roles = gameSystem.GetRoles();
+
+            //Ensure the minimum team composition doesn't exceed 100
+            int totalPercent = 0;
+            foreach(Team t in teams)
             {
-                Role role = (Role)MathX.PickOne(Roles);
-                //TODO Validate role chosen with percent composition
-                p.Role = role;
+                totalPercent += t.MinPercentComposition;
+            }
+            if(totalPercent>100)
+            {
+                throw new Exception("The minimum team composition required is greater than 100%, this is impossible to achieve.");
+            }
+
+            //Assign roles and validate minimum team compositions have been met
+            AssignRoles(roles);
+            int counter = 0;
+            while (!ValidateRoles(teams))
+            {
+                AssignRoles(roles);
+                if (counter > 50) throw new Exception("It's taken more than 50 attempts to randomly choose a valid team composition, either make the algorithm smarter, or the composition easier to achieve."); 
+                counter++;
             }
 
             //Initialize game
@@ -201,15 +233,34 @@ namespace GmailGameNarrator.Game
             return true;
         }
 
+        private void AssignRoles(List<Role> roles)
+        {
+            foreach (Player p in Players)
+            {
+                //TODO Change this so each person gets their own instance of a Role object.
+                Role role = (Role)MathX.PickOne(roles);
+                p.Role = role;
+            }
+        }
+
+        private bool ValidateRoles(List<Team> teams)
+        {
+            foreach (Team t in teams)
+            {
+                if(!t.MeetsMinComposition(this)) return false;
+            }
+            return true;
+        }
+
         private string ListTeammates(Player player)
         {
             string message = "";
             List<string> teammates = new List<string>();
             foreach (Player p in Players)
             {
-                if (!player.Equals(p) && player.Role.Team.Equals(p.Role.Team)) teammates.Add("<b>" + p.Name + "</b>");
+                if (!player.Equals(p) && player.Team.Equals(p.Team)) teammates.Add("<b>" + p.Name + "</b>");
             }
-            message = FlavorText.HtmlBulletList(teammates);
+            message = teammates.HtmlBulletList();
             return message;
         }
 
@@ -224,10 +275,9 @@ namespace GmailGameNarrator.Game
 
         public void CheckEndOfCycle()
         {
-            //TODO Finish check end of cycle
             foreach (Player p in Players)
             {
-                if (ActiveCycle == Cycle.Day && p.IsAlive && p.DayAction == null) return;
+                if (ActiveCycle == Cycle.Day && p.IsAlive && p.Vote == null) return;
                 if (ActiveCycle == Cycle.Night && p.IsAlive && p.NightActions.Count == 0) return;
             }
             if (ActiveCycle == Cycle.Day) EndOfDay();
@@ -240,35 +290,45 @@ namespace GmailGameNarrator.Game
             List<Player> candidates = new List<Player>();
             foreach (Player p in Players)
             {
-                candidates.Add(p.DayAction.Candidate);
-                if (!AnonymousVoting) votingResults.Add("<b>" + p.Name + "</b> voted for: <i>" + p.DayAction.Candidate.Name + "</i>");
+                candidates.Add(p.Vote.Candidate);
+                if (!AnonymousVoting) votingResults.Add(p.Name.b() + " voted for: " + p.Vote.Candidate.Name.i());
             }
             Dictionary<Player, int> candidateCounts = candidates.GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
-            //TODO There's a bug here
+            //Get 50% of players rounded up, the minimum for a majority
             int max = MathX.Percent(Players.Count, 50);
-            Player winner = null;
-
+            Player electee = null;
+            //Tally votes
             foreach (KeyValuePair<Player, int> c in candidateCounts)
             {
-                if (c.Value >= max) winner = c.Key;
+                //We found someone, but keep processing to record all the results.
+                if (c.Value >= max) electee = c.Key;
                 if (AnonymousVoting) votingResults.Add(c.Key.Name + ": " + c.Value);
             }
-            if (winner == null)
+            //The first 2 if statements can't trigger a game end condition because no one dies.
+            if (electee == null)
             {
                 ShowVotes(votingResults, "There was no majority vote.");
             }
-            else
+            else if (electee.Name.ToLowerInvariant().Equals("no one"))
             {
-                winner.IsAlive = false;
-                ShowVotes(votingResults, "<b>" + winner.Name + "</b> was chosen to be outcast and is no longer with the living.");
+                ShowVotes(votingResults, "The majority vote was for no one, everyone is safe today.  But, at least one of you will probably regret it tonight...");
             }
-            CheckGameEnd();
+            else {
+                //Mark electee as dead then check if the game is over
+                electee.IsAlive = false;
+                if (CheckGameEnd("Results of the last vote:<br />" + votingResults.HtmlBulletList())) return;
+                ShowVotes(votingResults, String.Format(FlavorText.PlayerOutcastMessage, electee.Name.b()));
+            }
+            foreach (Player p in Players)
+            {
+                if (p.IsAlive) Gmail.EnqueueMessage(p.Address, Subject, p.Role.Instructions);
+            }
         }
 
         private void ShowVotes(List<string> votingResults, string resultMessage)
         {
             string message = CycleTitle + " has come to an end. Votes have been tallied: ";
-            message += FlavorText.HtmlBulletList(votingResults);
+            message += votingResults.HtmlBulletList();
             NextCycle();
             message += resultMessage;
             message += " " + CycleTitle + " will now begin.";
@@ -277,16 +337,79 @@ namespace GmailGameNarrator.Game
 
         private void EndOfNight()
         {
-            //TODO End of Night
+            List<string> nightSummary = new List<string>();
+            foreach(Player p in Players)
+            {
+                //TODO At some point we need to process night actions in order
+                string msg = p.DoNightActions(this);
+                if (!String.IsNullOrEmpty(msg)  && !nightSummary.Contains(msg)) nightSummary.Add(msg);
+            }
+
+            string message = "The night has come to a close, ";
+            if (nightSummary.Count > 0) message += "this is what happened:<br />" + nightSummary.HtmlBulletList();
+            else message = "it was completely uneventful.";
+            MessageAllPlayers(message);
+                            
+            CheckGameEnd("");
         }
 
-        private void CheckGameEnd()
+        public List<Player> GetLivingPlayersOnMyTeam(Player player)
         {
-            //TODO Check game end
+            return GetLivingPlayersOnTeam(player.Team);
         }
 
-        //Override methods below here:
+        public List<Player> GetLivingPlayersOnTeam(Team team)
+        {
+            List<Player> pList = new List<Player>();
+            foreach(Player p in Players)
+            {
+                if (p.IsAlive && p.Team.Equals(team)) pList.Add(p);
+            }
+            return pList;
+        }
 
+        private bool CheckGameEnd(string finalMessage)
+        {
+            List<Player> winners = new List<Player>();
+            foreach(Player p in Players)
+            {
+                if(p.HaveIWon(this)) winners.Add(p);
+            }
+            if (winners.Count > 0)
+            {
+                GameOver(winners, finalMessage);
+                return true;
+            }
+            return false;
+        }
+
+        private void GameOver(List<Player> winners, string finalMessage)
+        {
+            List<string> winnersList = new List<string>();
+            foreach (Player w in winners)
+            {
+                string msg = StringX.b(w.Name) + " as " + StringX.b(w.Role.Name) + " for the " + StringX.b(w.Team.Name);
+                winnersList.Add(msg);
+            }
+            List<string> othersList = new List<string>();
+            //TODO BUG: The list below seems to be empty
+            List<Player> others = Players.Except(winners).ToList();
+            foreach (Player o in others)
+            {
+                string msg = StringX.b(o.Name) + " as " + StringX.b(o.Role.Name) + " for the " + StringX.b(o.Team.Name);
+            }
+            string message = "The game is over.  Winners:<br />";
+            message += winnersList.HtmlBulletList();
+            message += "Everyone else:<br />";
+            message += othersList.HtmlBulletList();
+            message += finalMessage;
+            MessageAllPlayers(message);
+            GameSystem.Instance.RemoveGame(this);
+        }
+
+        //==========================
+        //= Object overrides below =
+        //==========================
         public override string ToString()
         {
             return Title + " Overlord: " + Overlord;

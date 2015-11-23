@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GmailGameNarrator.Game.Roles;
 
 namespace GmailGameNarrator
 {
-    class MathX
+    static class MathX
     {
         private static Random R = new Random();
 
-        public static object PickOne(IEnumerable<object> objs)
+        public static object PickOne(this IEnumerable<object> objs)
         {
             int idx = R.Next(0, objs.Count());
             return objs.ElementAt(idx);
@@ -19,8 +16,9 @@ namespace GmailGameNarrator
 
         public static int Percent(int total, int percentage)
         {
-            double result = total * percentage / 100;
-            return (int)Math.Ceiling(result);
+            int result = total * percentage / 100;
+            if ((total * percentage % 100) > 0) result += 1;
+            return result;
         }
     }
 }

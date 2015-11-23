@@ -2,9 +2,12 @@
 {
     abstract class Team
     {
-        abstract public string Name { get; }
-        abstract public bool KnowsTeammates { get; }
-        abstract public int MinPercentage { get; }
+        public abstract string Name { get; }
+        public abstract bool KnowsTeammates { get; }
+        /// <summary>
+        /// The minimum percentage of players that must be on the team to be effective.
+        /// </summary>
+        public abstract int MinPercentComposition { get; }
 
         public override string ToString()
         {
@@ -19,6 +22,29 @@
         public override int GetHashCode()
         {
             return ToString().GetHashCode();
+        }
+
+        public bool HaveIWon(Player player, Game game)
+        {
+            foreach (Player p in game.Players)
+            {
+                if (p.IsAlive && !p.Team.Equals(player.Team)) return false;
+            }
+            return true;
+        }
+
+        public virtual string ValidateAction(Player player, Action action, Game game)
+        {
+            return "";
+        }
+
+        public bool MeetsMinComposition(Game game)
+        {
+            float teamCount = game.getTeamCount(this);
+            float totalCount = game.Players.Count;
+            float min = (float)MinPercentComposition;
+            if (teamCount / totalCount > min / 100) return true;
+            return false;
         }
     }
 }
