@@ -38,7 +38,7 @@ namespace GmailGameNarrator.Game
             }
         }
         private bool AnonymousVoting = false;
-        //TODO Implement summary functionality
+        //FEATURE Implement summary functionality
         private Summary summary = new Summary();
 
         public Game(int id, Player overlord)
@@ -64,7 +64,7 @@ namespace GmailGameNarrator.Game
             return MyPlayers.Remove(player);
         }
 
-        public float getTeamCount(Team team)
+        public float GetTeamCount(Team team)
         {
             int count = 0;
             foreach(Player p in Players)
@@ -99,13 +99,32 @@ namespace GmailGameNarrator.Game
             return false;
         }
 
-        public string Status()
+        /// <summary>
+        /// Generates a list of active teams from the Players in a given game.
+        /// </summary>
+        /// <returns></returns>
+        public List<Team> GetPlayingTeams()
         {
-            string status = "Status of " + Title + ":<br /><ul>"
-                + "<li>In progress: " + (isInProgress ? "Yes</li>" : "No</li>")
-                + (isInProgress ? "<li>Cycle: " + CycleTitle + "</li>" : "")
-                + "<li>Players:</li>" + ListPlayers() + "</ul>";
-            return status;
+            List<Team> Teams = new List<Team>();
+            foreach (Player p in Players)
+            {
+                if (!Teams.Contains(p.Team)) Teams.Add(p.Team);
+            }
+            return Teams;
+        }
+
+        /// <summary>
+        /// Generates a list of active <see cref="Role"/>s from the Players in a given game.
+        /// </summary>
+        /// <returns></returns>
+        public List<Role> GetPlayingRoles()
+        {
+            List<Role> Roles = new List<Role>();
+            foreach (Player p in Players)
+            {
+                if (!Roles.Contains(p.Role)) Roles.Add(p.Role);
+            }
+            return Roles;
         }
 
         private void NextCycle()
@@ -126,85 +145,19 @@ namespace GmailGameNarrator.Game
             }
         }
 
-        private string ListPlayers()
-        {
-            string players = "<ul>";
-            foreach (Player player in Players)
-            {
-                string livingState = "";
-                string cycleStatus = "";
-                if (isInProgress)
-                {
-                    if (player.IsAlive)
-                    {
-                        livingState = " - <b>Alive</b>";
-                        if (ActiveCycle == Cycle.Day && player.Vote == null)
-                        {
-                            cycleStatus = " - <b><i>Waiting On Action</i></b>";
-                        }
-                        else if (ActiveCycle == Cycle.Night && player.NightActions.Count == 0)
-                        {
-                            cycleStatus = " - <b><i>Waiting On Action</i></b>";
-                        }
-                        else
-                        {
-                            cycleStatus = " - Action Submitted";
-                        }
-                    }
-                    else livingState = " - Dead";
-                    
-                }
-                players = players + "<li>" + player + livingState + cycleStatus + "</li>";
-            }
-            players = players + "</ul>";
-            return players;
-        }
-
-        /// <summary>
-        /// Sends a message to the given player listing all their available commands for the given game.
-        /// </summary>
-        /// <param name="game"></param>
-        /// <param name="player"></param>
-        /// <returns></returns>
-        public string Help(Player player)
-        {
-            string commands = "<ul>";
-            if (player.IsAlive && IsInProgress() && ActiveCycle == Cycle.Day) commands += "<li>To vote for someone to be cast out: <b>Vote</b> <i>name</i></li>";
-            if (IsOverlord(player) && !IsInProgress()) commands += "<li>To start the game: <b>Start</b>.</li>";
-            if (IsOverlord(player)) commands += "<li>To cancel the game: <b>Cancel</b></li>";
-            if (IsOverlord(player)) commands += "<li>To kick a player from the game: <b>Kick</b> <i>name</i></li>";
-            if (IsOverlord(player)) commands += "<li>To ban a player from the game: <b>Ban</b> <i>name</i></li>";
-            if (player.IsAlive && !IsOverlord(player)) commands += "<li>To quit the game: <b>Quit</b></li>";
-            commands += "<li>To see the game status: <b>Status</b></li>";
-            commands += "</ul>";
-            commands += "<br />To use a command, reply to this email as indicated above.";
-            return commands;
-        }
-
         public bool Start()
         {
             if (Players.Count < 3) return false;
             GameSystem gameSystem = GameSystem.Instance;
-            List<Team> teams = gameSystem.GetTeams();
-            List<Role> roles = gameSystem.GetRoles();
-
-            //Ensure the minimum team composition doesn't exceed 100
-            int totalPercent = 0;
-            foreach(Team t in teams)
-            {
-                totalPercent += t.MinPercentComposition;
-            }
-            if(totalPercent>100)
-            {
-                throw new Exception("The minimum team composition required is greater than 100%, this is impossible to achieve.");
-            }
+            List<Type> roleTypes = gameSystem.GetRoleTypes();
 
             //Assign roles and validate minimum team compositions have been met
-            AssignRoles(roles);
+            AssignRoles(roleTypes);
+            validateTeamComposition();
             int counter = 0;
-            while (!ValidateRoles(teams))
+            while (!ValidateRoles())
             {
-                AssignRoles(roles);
+                AssignRoles(roleTypes);
                 if (counter > 50) throw new Exception("It's taken more than 50 attempts to randomly choose a valid team composition, either make the algorithm smarter, or the composition easier to achieve."); 
                 counter++;
             }
@@ -225,30 +178,63 @@ namespace GmailGameNarrator.Game
                 if (String.IsNullOrEmpty(teammates)) teammates = "You have no teammates.";
                 if (r.Team.KnowsTeammates) body += "Teammates:<br />" + teammates;
                 body += FlavorText.Divider + CycleTitle + " has begun, use the commands below to take an action.";
-                body += FlavorText.Divider + Status();
-                body += FlavorText.Divider + Help(p);
+                body += FlavorText.Divider + this.Status();
+                body += FlavorText.Divider + this.Help(p);
                 Gmail.EnqueueMessage(p.Address, Subject, body);
             }
 
             return true;
         }
 
-        private void AssignRoles(List<Role> roles)
+        /// <summary>
+        /// Ensures the minimum team composition doesn't exceed 100%.
+        /// </summary>
+        private void validateTeamComposition()
         {
-            foreach (Player p in Players)
+            int totalPercent = 0;
+            foreach (Team t in GetPlayingTeams())
             {
-                //TODO Change this so each person gets their own instance of a Role object.
-                Role role = (Role)MathX.PickOne(roles);
-                p.Role = role;
+                totalPercent += t.MinPercentComposition;
+            }
+            if (totalPercent > 100)
+            {
+                throw new Exception("The minimum team composition required is greater than 100%, this is impossible to achieve.");
             }
         }
 
-        private bool ValidateRoles(List<Team> teams)
+        private void AssignRoles(List<Type> roleTypes)
         {
-            foreach (Team t in teams)
+            foreach (Player p in Players)
             {
-                if(!t.MeetsMinComposition(this)) return false;
+                Type type = (Type)roleTypes.PickOne();
+                Role role = (Role)Activator.CreateInstance(type);
+                p.Role = role;
             }
+        }
+        /// <summary>
+        /// Validates the following:
+        /// <para />For each team: Percentage of players in this game is greater than <see cref="Team.MinPercentComposition"/>
+        /// <para />At least 2 teams are playing.
+        /// <para /><see cref="Role.MaxPlayers"/> is not violated.
+        /// </summary>
+        /// <returns></returns>
+        private bool ValidateRoles()
+        {
+            if (GetPlayingTeams().Count < 2) return false;
+            foreach (Team t in GetPlayingTeams())
+            {
+                if (!((GetTeamCount(t) / Players.Count) * 100 > t.MinPercentComposition)) return false;
+            }
+            foreach (Role r in GetPlayingRoles())
+            {
+                int count = 0;
+                foreach (Player p in Players)
+                {
+                    if (p.Role.Equals(r)) count++;
+                }
+                if (count > r.MaxPlayers) return false;
+            }
+            //FEATURE Implement max percentage of role per team
             return true;
         }
 
@@ -271,7 +257,6 @@ namespace GmailGameNarrator.Game
                 Gmail.EnqueueMessage(p.Address, Subject, body);
             }
         }
-
 
         public void CheckEndOfCycle()
         {
@@ -321,7 +306,10 @@ namespace GmailGameNarrator.Game
             }
             foreach (Player p in Players)
             {
-                if (p.IsAlive) Gmail.EnqueueMessage(p.Address, Subject, p.Role.Instructions);
+                string message = p.Role.Instructions;
+                string teammates = ListTeammates(p);
+                if(p.Team.KnowsTeammates && !String.IsNullOrEmpty(teammates)) message += FlavorText.Divider + teammates);
+                if (p.IsAlive) Gmail.EnqueueMessage(p.Address, Subject, message);
             }
         }
 
@@ -340,7 +328,7 @@ namespace GmailGameNarrator.Game
             List<string> nightSummary = new List<string>();
             foreach(Player p in Players)
             {
-                //TODO At some point we need to process night actions in order
+                //FEATURE At some point we need to process night actions in order
                 string msg = p.DoNightActions(this);
                 if (!String.IsNullOrEmpty(msg)  && !nightSummary.Contains(msg)) nightSummary.Add(msg);
             }
@@ -392,7 +380,7 @@ namespace GmailGameNarrator.Game
                 winnersList.Add(msg);
             }
             List<string> othersList = new List<string>();
-            //TODO BUG: The list below seems to be empty
+            //BUG The list below seems to be empty
             List<Player> others = Players.Except(winners).ToList();
             foreach (Player o in others)
             {

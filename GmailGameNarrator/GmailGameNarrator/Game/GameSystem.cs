@@ -47,12 +47,13 @@ namespace GmailGameNarrator.Game
         }
 
         /// <summary>
-        /// Uses the assembly to generate a list of all role classes and instantiate them.
+        /// Uses the assembly to generate a list of all Role classes.
+        /// Implements <see cref="Role.Priority"/> by including <code>Priority</code> number of that Role's type.
         /// </summary>
-        /// <returns></returns>
-        public List<Role> GetRoles()
+        /// <returns>List containing each type of <see cref="Role"/></returns>
+        public List<Type> GetRoleTypes()
         {
-            List<Role> Roles = new List<Role>();
+            List<Type> RoleTypes = new List<Type>();
             foreach (Type t in Assembly.GetExecutingAssembly().GetTypes())
             {
                 if (t.Namespace == "GmailGameNarrator.Game.Roles")
@@ -61,25 +62,11 @@ namespace GmailGameNarrator.Game
                     {
                         Role role = (Role)Activator.CreateInstance(t);
                         //Implements the priority property
-                        for(int i=0;i<role.Priority;i++) Roles.Add(role);
+                        for(int i=0;i<role.Priority;i++) RoleTypes.Add(t);
                     }
                 }
             }
-            return Roles;
-        }
-
-        /// <summary>
-        /// Generates a list of teams from the list of roles, just in case a team has no roles associated with it.
-        /// </summary>
-        /// <returns></returns>
-        public List<Team> GetTeams()
-        {
-            List<Team> Teams = new List<Team>();
-            foreach (Role role in GetRoles())
-            {
-                if (!Teams.Contains(role.Team)) Teams.Add(role.Team);
-            }
-            return Teams;
+            return RoleTypes;
         }
 
         public Game GetGameById(int id)

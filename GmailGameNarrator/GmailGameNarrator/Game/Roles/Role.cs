@@ -11,9 +11,19 @@ namespace GmailGameNarrator.Game.Roles
         public abstract string Name { get; }
         public abstract Team Team { get; }
         /// <summary>
-        /// The maximum number of players with this role in a game.
+        /// Maximum percentage of players with this role on a team.
         /// </summary>
-        public abstract int MaxPlayers { get; }
+        public abstract int MaxPercentage { get; }
+        /// <summary>
+        /// Maximum number of players with this role in a game.
+        /// </summary>
+        public virtual int MaxPlayers
+        {
+            get
+            {
+                return 1000;
+            }
+        }
         /// <summary>
         /// Likelihood of assigning this role, to make the more fun roles more likely to be picked.
         /// </summary>

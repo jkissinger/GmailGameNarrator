@@ -119,10 +119,12 @@
     <Compile Include="Game\Actions\Action.cs" />
     <Compile Include="Game\FlavorText.cs" />
     <Compile Include="Game\Game.cs" />
+    <Compile Include="Game\GameX.cs" />
     <Compile Include="Game\MessageParser.cs" />
     <Compile Include="Game\GameSystem.cs" />
     <Compile Include="Game\Player.cs" />
     <Compile Include="Game\Roles\Antagonist.cs" />
+    <Compile Include="Game\Roles\Healer.cs" />
     <Compile Include="Game\Roles\Sheeple.cs" />
     <Compile Include="Game\Roles\Role.cs" />
     <Compile Include="Game\Summary.cs" />

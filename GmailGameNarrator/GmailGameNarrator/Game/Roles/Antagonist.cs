@@ -22,7 +22,7 @@ namespace GmailGameNarrator.Game.Roles
             }
         }
 
-        public override int MaxPlayers
+        public override int MaxPercentage
         {
             get
             {

@@ -1,4 +1,5 @@
-﻿using Google.Apis.Auth.OAuth2;
+﻿using GmailGameNarrator.Game;
+using Google.Apis.Auth.OAuth2;
 using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
 using Google.Apis.Services;
@@ -197,6 +198,9 @@ namespace GmailGameNarrator
 
         public static void EnqueueMessage(string to, string subject, string body)
         {
+            //FEATURE Figure out how to make email clients treat each line as new
+            //The problem is gmail's "Quoted text"
+            //Tried: adding timestamp to end of message, tried adding random string to name of each br element
             SimpleMessage outgoing = new SimpleMessage();
             outgoing.To = to;
             outgoing.Subject = subject;

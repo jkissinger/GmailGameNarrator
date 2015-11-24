@@ -37,14 +37,5 @@
         {
             return "";
         }
-
-        public bool MeetsMinComposition(Game game)
-        {
-            float teamCount = game.getTeamCount(this);
-            float totalCount = game.Players.Count;
-            float min = (float)MinPercentComposition;
-            if (teamCount / totalCount > min / 100) return true;
-            return false;
-        }
     }
 }

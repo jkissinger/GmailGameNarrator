@@ -11,7 +11,7 @@ namespace GmailGameNarrator
     public static class StringX
     {
 
-        //TODO Switch all of these to string extensions
+        //FEATURE Switch all of these to string extensions
         public static string GetTextAfter(this string str, string delimiter)
         {
             delimiter = delimiter.ToLowerInvariant();
