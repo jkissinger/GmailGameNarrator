@@ -1,6 +1,6 @@
 ﻿namespace GmailGameNarrator.Game.Teams
 {
-    class AntagonistTeam : Team
+    public class AntagonistTeam : Team
     {
         public override string Name
         {
@@ -23,17 +23,12 @@
             }
         }
 
-        public override string ValidateAction(Player player, Action action, Game game)
+        public override bool IsMajor
         {
-            string nomineeName = action.Parameter.GetTextAfter("vote ");
-            Player nominee = game.GetPlayerByName(nomineeName);
-            if (nominee == null) return nomineeName.b() + " is not a valid player in " + game.Title;
-            else if (nominee.Team.Equals(player.Team)) return "You cannot vote for " + nomineeName.b() + ".  They are on your team!";
-            else
+            get
             {
-                Gmail.EnqueueMessage(player.Address, game.Subject, "Registered your " + player.Role.Name.b() + " vote for " + nomineeName.b() + ".");
+                return true;
             }
-            return "";
         }
     }
 }

@@ -6,7 +6,7 @@ using System;
 
 namespace GmailGameNarrator
 {
-    class Program
+    public class Program
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger("System." + System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public static bool running = true;
@@ -24,6 +24,8 @@ namespace GmailGameNarrator
             "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the\n" +
             "<a href=http://www.gnu.org/licenses/>GNU General Public License</a> for more details.\n";
         public static readonly string GitHub = "<a href=http://github.com/jkissinger/GmailGameNarrator>GitHub</a>";
+
+        public static string UnitTestAddress = "@unit.test";
 
         /// <summary>
         /// Begins the Gmail Game Narrator program.

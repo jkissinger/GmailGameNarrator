@@ -10,7 +10,7 @@ namespace GmailGameNarrator.Threads
     /// <summary>
     /// Implements the exponential backoff as recommended by the Gmail API
     /// </summary>
-    class GmailRequestBackoff : TimerThread
+    public class GmailRequestBackoff : TimerThread
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger("System." + System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly object taskLock = new object();

@@ -1,18 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace GmailGameNarrator.Game.Roles
+﻿namespace GmailGameNarrator.Game.Roles
 {
-    public class Healer : Sheeple
+    class Investigator : Sheeple
     {
         public override string Name
         {
             get
             {
-                return "Doctor";
+                return "Investigator";
             }
         }
 
@@ -28,7 +22,7 @@ namespace GmailGameNarrator.Game.Roles
         {
             get
             {
-                return 1;
+                return 3;
             }
         }
 
@@ -44,44 +38,45 @@ namespace GmailGameNarrator.Game.Roles
         {
             get
             {
-                return 1;
+                return 3;
             }
         }
+
+        private string ActionText = "check";
 
         public override string Instructions
         {
             get
             {
-                return "At night, send a message with \"" + Name.b() + " protect player\" in the body.  You will do everything you can to prevent that player from dying that night.";
+                return "At night, send a message with \"" + Name.b() + " " + ActionText + " player\" in the body.  You will look into that player's affairs closely and by morning should have an idea of their allegiance.";
             }
         }
 
         public override string DoNightActions(Player player, Game game)
         {
-            string nomineeName = player.Actions[0].Parameter.GetTextAfter("protect ");
+            string nomineeName = player.Actions[0].Parameter.GetTextAfter(ActionText + " ");
             Player nominee = game.GetPlayerByName(nomineeName);
-            nominee.IsProtected = true;
-            Gmail.EnqueueMessage(player.Address, game.Subject, "You are protecting " + nominee.Name.b());
+            Gmail.EnqueueMessage(player.Address, game.Subject, "You have investigated " + nominee.Name.b() + " and determined their allegiance is with the " + nominee.Team.b());
             return "";
         }
 
         private Player GetNominee(Player player, Game game)
         {
-            string nomineeName = player.Actions[0].Parameter.GetTextAfter("protect ");
+            string nomineeName = player.Actions[0].Parameter.GetTextAfter(ActionText + " ");
             Player newNominee = game.GetPlayerByName(nomineeName);
             return newNominee;
         }
 
         public override string ValidateAction(Player player, Action action, Game game)
         {
-            string nomineeName = action.Parameter.GetTextAfter("protect ");
+            string nomineeName = action.Parameter.GetTextAfter(ActionText + " ");
             Player nominee = game.GetPlayerByName(nomineeName);
             if (nominee == null) return nomineeName.b() + " is not a valid player in " + game.Title;
-            else if (nominee.Equals(player)) return "You cannot protect yourself!";
+            else if (nominee.Equals(player)) return "You cannot " + ActionText + " yourself!";
             else if (!nominee.IsAlive) return "Choice rejected: " + nomineeName.b() + " is already dead!";
             else
             {
-                Gmail.EnqueueMessage(player.Address, game.Subject, "Registered your night action to protect " + nomineeName.b() + ".");
+                Gmail.EnqueueMessage(player.Address, game.Subject, "Registered your night action to " + ActionText  + " " + nomineeName.b() + ".");
             }
             return "";
         }

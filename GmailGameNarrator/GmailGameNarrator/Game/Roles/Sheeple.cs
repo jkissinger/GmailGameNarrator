@@ -3,7 +3,7 @@ using GmailGameNarrator.Game.Teams;
 
 namespace GmailGameNarrator.Game.Roles
 {
-    class Sheeple : Role
+    public class Sheeple : Role
     {
         public override string Name
         {
@@ -21,7 +21,7 @@ namespace GmailGameNarrator.Game.Roles
             }
         }
 
-        public override int Priority
+        public override int Prevalence
         {
             get
             {
@@ -42,6 +42,14 @@ namespace GmailGameNarrator.Game.Roles
             get
             {
                 return "At night, send a message with " + Name.b() + " in the body.  Nothing will happen, but this is to ensure everyone has a night action.";
+            }
+        }
+
+        public override int NightActionPriority
+        {
+            get
+            {
+                return 0;
             }
         }
     }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GmailGameNarrator.Threads
 {
-    class TaskState
+    public class TaskState
     {
         /// <summary>
         /// A reference to the timer object

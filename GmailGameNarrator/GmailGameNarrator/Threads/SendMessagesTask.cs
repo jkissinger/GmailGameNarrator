@@ -2,7 +2,7 @@
 
 namespace GmailGameNarrator.Threads
 {
-    class SendMessagesTask : TimerThread
+    public class SendMessagesTask : TimerThread
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger("System." + System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly object taskLock = new object();

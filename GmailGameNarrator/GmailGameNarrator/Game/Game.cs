@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace GmailGameNarrator.Game
 {
-    class Game
+    public class Game
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger("System." + System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public int Id { get; }
@@ -64,12 +64,22 @@ namespace GmailGameNarrator.Game
             return MyPlayers.Remove(player);
         }
 
-        public float GetTeamCount(Team team)
+        public int GetCountOfPlayersOnTeam(Team team)
         {
             int count = 0;
-            foreach(Player p in Players)
+            foreach (Player p in Players)
             {
-                if (p.Team.Equals(team)) count++;
+                if (p.Role != null && p.Team.Equals(team)) count++;
+            }
+            return count;
+        }
+
+        public int GetCountOfPlayersWithRole(Role role)
+        {
+            int count = 0;
+            foreach (Player p in Players)
+            {
+                if (p.Role != null && p.Role.Equals(role)) count++;
             }
             return count;
         }
@@ -100,15 +110,15 @@ namespace GmailGameNarrator.Game
         }
 
         /// <summary>
-        /// Generates a list of active teams from the Players in a given game.
+        /// Generates a list of active teams from the Players in a given game. No duplicates!
         /// </summary>
         /// <returns></returns>
-        public List<Team> GetPlayingTeams()
+        public List<Team> GetTeamsPlayingUnique()
         {
             List<Team> Teams = new List<Team>();
             foreach (Player p in Players)
             {
-                if (!Teams.Contains(p.Team)) Teams.Add(p.Team);
+                if (p.Role != null && !Teams.Contains(p.Team)) Teams.Add(p.Team);
             }
             return Teams;
         }
@@ -138,10 +148,12 @@ namespace GmailGameNarrator.Game
                 MyCycle = Cycle.Day;
                 RoundCounter++;
             }
-            foreach(Player p in Players)
+            //Reset players
+            foreach (Player p in Players)
             {
                 p.Vote = null;
                 p.ClearNightActions();
+                p.IsProtected = false;
             }
         }
 
@@ -151,16 +163,8 @@ namespace GmailGameNarrator.Game
             GameSystem gameSystem = GameSystem.Instance;
             List<Type> roleTypes = gameSystem.GetRoleTypes();
 
-            //Assign roles and validate minimum team compositions have been met
+            //Assign roles
             AssignRoles(roleTypes);
-            validateTeamComposition();
-            int counter = 0;
-            while (!ValidateRoles())
-            {
-                AssignRoles(roleTypes);
-                if (counter > 50) throw new Exception("It's taken more than 50 attempts to randomly choose a valid team composition, either make the algorithm smarter, or the composition easier to achieve."); 
-                counter++;
-            }
 
             //Initialize game
             RoundCounter++;
@@ -170,7 +174,6 @@ namespace GmailGameNarrator.Game
             //Iterate again after roles are finalized to setup the players and notify them.
             foreach (Player p in Players)
             {
-                p.IsAlive = true;
                 Role r = p.Role;
                 string body = FlavorText.GetStartGameMessage();
                 body += FlavorText.Divider + "You have been assigned the role of <b>" + r.Name + "</b> and are on the <b>" + r.Team.Name + "</b> team.<br />";
@@ -186,57 +189,136 @@ namespace GmailGameNarrator.Game
             return true;
         }
 
-        /// <summary>
-        /// Ensures the minimum team composition doesn't exceed 100%.
-        /// </summary>
-        private void validateTeamComposition()
+        private List<Team> GetMajorTeamsAvailable(List<Type> roleTypes)
         {
-            int totalPercent = 0;
-            foreach (Team t in GetPlayingTeams())
+            List<Team> majors = new List<Team>();
+            foreach (Type type in roleTypes)
             {
-                totalPercent += t.MinPercentComposition;
+                Role role = (Role)Activator.CreateInstance(type);
+                if (role.Team.IsMajor && !majors.Contains(role.Team)) majors.Add(role.Team);
             }
-            if (totalPercent > 100)
+            return majors;
+        }
+
+        private int GetMajorTeamsPlayingCount()
+        {
+            List<Team> teams = new List<Team>();
+            foreach (Team team in GetTeamsPlayingUnique())
             {
-                throw new Exception("The minimum team composition required is greater than 100%, this is impossible to achieve.");
+                if (team.IsMajor) teams.Add(team);
+            }
+            return teams.Count;
+        }
+
+        public void AssignRoles(List<Type> roleTypes)
+        {
+            //Randomize the list of players
+            foreach(Player p in MathX.RandomizedList(Players))
+            {
+                if (GetMajorTeamsPlayingCount() < 2)
+                {
+                    //If we have no teams yet we don't care, set team to null
+                    List<Team> teams = GetTeamsPlayingUnique();
+                    Team team = null;
+                    //We have at least 1 team, set the team to that team, and thisTeam to false to pick a different team
+                    if (teams.Count > 0) team = teams[0];
+                    //We don't have enough major teams, assign another one
+                    AssignRoleMajorTeam(p, team, false, roleTypes);
+                }
+                else
+                {
+                    AssignRole(p, GetNextTeam(), true, roleTypes);
+                }
             }
         }
 
-        private void AssignRoles(List<Type> roleTypes)
-        {
-            foreach (Player p in Players)
-            {
-                Type type = (Type)roleTypes.PickOne();
-                Role role = (Role)Activator.CreateInstance(type);
-                p.Role = role;
-            }
-        }
         /// <summary>
-        /// Validates the following:
-        /// <para />For each team: Percentage of players in this game is greater than <see cref="Team.MinPercentComposition"/>
-        /// <para />At least 2 teams are playing.
-        /// <para /><see cref="Role.MaxPlayers"/> is not violated.
+        /// Determines the next team that needs to have a player assigned to it, or null if any.  Precedence is given to major teams.
         /// </summary>
-        /// <returns></returns>
-        private bool ValidateRoles()
+        /// <returns>The next team that needs a player</returns>
+        private Team GetNextTeam()
         {
-            if (GetPlayingTeams().Count < 2) return false;
-            foreach (Team t in GetPlayingTeams())
+            //Give precedence to Major teams
+            foreach (Team team in GetTeamsPlayingUnique())
             {
-                if (!((GetTeamCount(t) / Players.Count) * 100 > t.MinPercentComposition)) return false;
-            }
-            foreach (Role r in GetPlayingRoles())
-            {
-                int count = 0;
-                foreach (Player p in Players)
+                if (team.IsMajor)
                 {
-                    if (p.Role.Equals(r)) count++;
+                    int min = MathX.Percent(Players.Count, team.MinPercentComposition);
+                    if (GetCountOfPlayersOnTeam(team) < min) return team;
                 }
-                if (count > r.MaxPlayers) return false;
             }
-            //FEATURE Implement max percentage of role per team
-            return true;
+            //Check other teams
+            foreach (Team team in GetTeamsPlayingUnique())
+            {
+                int min = MathX.Percent(Players.Count, team.MinPercentComposition);
+                if (GetCountOfPlayersOnTeam(team) < min) return team;
+            }
+            return null;
         }
+
+        private void AssignRoleMajorTeam(Player player, Team team, bool thisTeam, List<Type> roleTypes)
+        {
+            AssignRole(player, team, thisTeam, roleTypes);
+            while (!player.Team.IsMajor)
+            {
+                AssignRole(player, team, thisTeam, roleTypes);
+            }
+        }
+
+        /// <summary>
+        /// Assigns a random role to a player.
+        /// <para />
+        /// If team is null, it can be any team.  Otherwise, if thisTeam is true it must be the same team as team.  If thisTeam is false, it must be a different team than team.
+        /// </summary>
+        /// <param name="player">Player to assign the role to</param>
+        /// <param name="team">The team the assigned role must match or not match depending on thisTeam.  If null, any team is allowed.</param>
+        /// <param name="thisTeam">Whether or not the assigned role should match or mismatch the team parameter</param>
+        /// <param name="roleTypes">List of available roles, by class type</param>
+        private void AssignRole(Player player, Team team, bool thisTeam, List<Type> roleTypes)
+        {
+            player.Role = GetRandomRole(roleTypes);
+            while (!ValidRole(team, player, thisTeam))
+            {
+                player.Role = GetRandomRole(roleTypes);
+            }
+        }
+
+        private bool ValidRole(Team team, Player player, bool thisTeam)
+        {
+            //Whether or not any team is allowed
+            bool anyTeam = team == null;
+            bool teamIsValid = true;
+            if (!anyTeam)
+            {
+                //Any team is not allowed; check that the team is valid
+                teamIsValid = player.Team.Equals(team) && thisTeam || !player.Team.Equals(team) && !thisTeam;
+            }
+            bool roleIsValid = !MaxPlayersForRoleReached(player.Role);
+            return teamIsValid && roleIsValid;
+        }
+
+        /// <summary>
+        /// Implements the properties <see cref="Role.MaxPercentage"/> and <see cref="Role.MaxPlayers"/>.
+        /// </summary>
+        /// <param name="role"></param>
+        /// <returns>True if either property is exceeded, false otherwise.</returns>
+        private bool MaxPlayersForRoleReached(Role role)
+        {
+            int playerCount = GetCountOfPlayersWithRole(role);
+            int minPercent = MathX.Percent(Players.Count, role.MaxPercentage);
+            int minCount = role.MaxPlayers;
+            if (playerCount > minPercent || playerCount > minCount) return true;
+            return false;
+        }
+
+
+        private Role GetRandomRole(List<Type> roleTypes)
+        {
+            Type type = (Type)roleTypes.PickOne();
+            Role role = (Role)Activator.CreateInstance(type);
+            return role;
+        }
+        
 
         private string ListTeammates(Player player)
         {
@@ -263,7 +345,7 @@ namespace GmailGameNarrator.Game
             foreach (Player p in Players)
             {
                 if (ActiveCycle == Cycle.Day && p.IsAlive && p.Vote == null) return;
-                if (ActiveCycle == Cycle.Night && p.IsAlive && p.NightActions.Count == 0) return;
+                if (ActiveCycle == Cycle.Night && p.IsAlive && p.Actions.Count == 0) return;
             }
             if (ActiveCycle == Cycle.Day) EndOfDay();
             else EndOfNight();
@@ -298,9 +380,10 @@ namespace GmailGameNarrator.Game
             {
                 ShowVotes(votingResults, "The majority vote was for no one, everyone is safe today.  But, at least one of you will probably regret it tonight...");
             }
-            else {
+            else
+            {
                 //Mark electee as dead then check if the game is over
-                electee.IsAlive = false;
+                electee.Kill(null);
                 if (CheckGameEnd("Results of the last vote:<br />" + votingResults.HtmlBulletList())) return;
                 ShowVotes(votingResults, String.Format(FlavorText.PlayerOutcastMessage, electee.Name.b()));
             }
@@ -308,7 +391,7 @@ namespace GmailGameNarrator.Game
             {
                 string message = p.Role.Instructions;
                 string teammates = ListTeammates(p);
-                if(p.Team.KnowsTeammates && !String.IsNullOrEmpty(teammates)) message += FlavorText.Divider + teammates);
+                if (p.Team.KnowsTeammates && !String.IsNullOrEmpty(teammates)) message += FlavorText.Divider + teammates;
                 if (p.IsAlive) Gmail.EnqueueMessage(p.Address, Subject, message);
             }
         }
@@ -326,18 +409,24 @@ namespace GmailGameNarrator.Game
         private void EndOfNight()
         {
             List<string> nightSummary = new List<string>();
-            foreach(Player p in Players)
+            //This is very inefficient, but even with a game of 20 players, it will only take 100 iterations, which is trivial
+            for (int i = 0; i < 5; i++)
             {
-                //FEATURE At some point we need to process night actions in order
-                string msg = p.DoNightActions(this);
-                if (!String.IsNullOrEmpty(msg)  && !nightSummary.Contains(msg)) nightSummary.Add(msg);
+                foreach (Player p in Players)
+                {
+                    if (p.Role.NightActionPriority == i)
+                    {
+                        string msg = p.DoActions(this);
+                        if (!String.IsNullOrEmpty(msg) && !nightSummary.Contains(msg)) nightSummary.Add(msg);
+                    }
+                }
             }
 
             string message = "The night has come to a close, ";
             if (nightSummary.Count > 0) message += "this is what happened:<br />" + nightSummary.HtmlBulletList();
             else message = "it was completely uneventful.";
             MessageAllPlayers(message);
-                            
+
             CheckGameEnd("");
         }
 
@@ -349,19 +438,19 @@ namespace GmailGameNarrator.Game
         public List<Player> GetLivingPlayersOnTeam(Team team)
         {
             List<Player> pList = new List<Player>();
-            foreach(Player p in Players)
+            foreach (Player p in Players)
             {
                 if (p.IsAlive && p.Team.Equals(team)) pList.Add(p);
             }
             return pList;
         }
 
-        private bool CheckGameEnd(string finalMessage)
+        public bool CheckGameEnd(string finalMessage)
         {
             List<Player> winners = new List<Player>();
-            foreach(Player p in Players)
+            foreach (Player p in Players)
             {
-                if(p.HaveIWon(this)) winners.Add(p);
+                if (p.HaveIWon(this)) winners.Add(p);
             }
             if (winners.Count > 0)
             {
@@ -380,11 +469,11 @@ namespace GmailGameNarrator.Game
                 winnersList.Add(msg);
             }
             List<string> othersList = new List<string>();
-            //BUG The list below seems to be empty
             List<Player> others = Players.Except(winners).ToList();
             foreach (Player o in others)
             {
                 string msg = StringX.b(o.Name) + " as " + StringX.b(o.Role.Name) + " for the " + StringX.b(o.Team.Name);
+                othersList.Add(msg);
             }
             string message = "The game is over.  Winners:<br />";
             message += winnersList.HtmlBulletList();

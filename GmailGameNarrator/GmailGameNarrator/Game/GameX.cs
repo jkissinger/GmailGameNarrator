@@ -36,7 +36,7 @@ namespace GmailGameNarrator.Game
                         {
                             cycleStatus = " - <b><i>Waiting On Action</i></b>";
                         }
-                        else if (game.ActiveCycle == Game.Cycle.Night && player.NightActions.Count == 0)
+                        else if (game.ActiveCycle == Game.Cycle.Night && player.Actions.Count == 0)
                         {
                             cycleStatus = " - <b><i>Waiting On Action</i></b>";
                         }

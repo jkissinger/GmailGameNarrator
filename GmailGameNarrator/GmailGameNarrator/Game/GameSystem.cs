@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace GmailGameNarrator.Game
 {
-    class GameSystem
+    public class GameSystem
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger("System." + System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private static readonly log4net.ILog gameLog = log4net.LogManager.GetLogger("Game." + System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -48,7 +48,7 @@ namespace GmailGameNarrator.Game
 
         /// <summary>
         /// Uses the assembly to generate a list of all Role classes.
-        /// Implements <see cref="Role.Priority"/> by including <code>Priority</code> number of that Role's type.
+        /// Implements <see cref="Role.Prevalence"/> by including <code>Prevalence</code> number of that Role's type.
         /// </summary>
         /// <returns>List containing each type of <see cref="Role"/></returns>
         public List<Type> GetRoleTypes()
@@ -61,8 +61,8 @@ namespace GmailGameNarrator.Game
                     if (!t.IsAbstract)
                     {
                         Role role = (Role)Activator.CreateInstance(t);
-                        //Implements the priority property
-                        for(int i=0;i<role.Priority;i++) RoleTypes.Add(t);
+                        //Implements the Prevalence property
+                        for(int i=0;i<role.Prevalence;i++) RoleTypes.Add(t);
                     }
                 }
             }
@@ -147,19 +147,25 @@ namespace GmailGameNarrator.Game
                 }
                 else
                 {
-                    HandleBadAction(game.Subject, player, action, "You voted for an invalid player <b>" + action.Parameter + "</b> see the player's names below.<hr>" + game.Status());
+                    HandleBadAction(game.Subject, player, action, "You voted for an invalid player <b>" + action.Parameter + "</b> see the player's names below." + FlavorText.Divider + game.Status());
                     return;
                 }
             }
-            if(nominee.Equals(player))
+            if (nominee.Equals(player))
             {
                 HandleBadAction(game.Subject, player, action, "You cannot vote for yourself.");
-                return;
             }
-            Vote vote = new Vote(action, nominee);
-            player.Vote = vote;
-            Gmail.EnqueueMessage(player.Address, game.Subject, "Registered your vote for <b>" + nominee.Name + "</b>.");
-            game.CheckEndOfCycle();
+            else if (!nominee.IsAlive)
+            {
+                HandleBadAction(game.Subject, player, action, nominee.Name.b() + " is already dead. See who's alive below:" + FlavorText.Divider + game.Status());
+            }
+            else
+            {
+                Vote vote = new Vote(action, nominee);
+                player.Vote = vote;
+                Gmail.EnqueueMessage(player.Address, game.Subject, "Registered your vote for <b>" + nominee.Name + "</b>.");
+                game.CheckEndOfCycle();
+            }
         }
 
         public void Help(Player player, Action action, Game game)
@@ -205,7 +211,7 @@ namespace GmailGameNarrator.Game
         {
             if (game.IsInProgress())
             {
-                player.IsAlive = false;
+                player.Quit();
                 Gmail.EnqueueMessage(player.Address, game.Subject, "Your character in " + game.Title + ", " + player.Name + " is now dead.");
                 gameLog.Info(player + " is dead because they quit " + game);
             }
@@ -275,9 +281,7 @@ namespace GmailGameNarrator.Game
                 HandleBadAction("New Game", overlord, action, "You are already playing in " + game + " , you may only play one game at a time.");
                 return;
             }
-            game = new Game(Properties.Settings.Default.NumGames, overlord);
-            Properties.Settings.Default.NumGames++;
-            Properties.Settings.Default.Save();
+            game = new Game(GetNextGameId(), overlord);
             Games.Add(game);
             Gmail.EnqueueMessage(overlord.Address, game.Title, game.Title + " has been started, you are the <b>Overlord</b>."
                 + "<br /><br />Have your friends join by sending a message with the subject \"" + game.Title + "\" and body \"Join as <i>name</i>\" where <i>name</i> is their name.<br />"
@@ -285,6 +289,14 @@ namespace GmailGameNarrator.Game
                 + "<br /><hr><br />" + Program.License.Replace('\n'.ToString(), "<br />")
                 + "<br /><br />Download this program on " + Program.GitHub);
             gameLog.Info("Started new game: " + game);
+        }
+
+        public int GetNextGameId()
+        {
+            int id = Properties.Settings.Default.NumGames;
+            Properties.Settings.Default.NumGames++;
+            Properties.Settings.Default.Save();
+            return id;
         }
 
         private void HandleBadAction(string subject, Player player, Action action, string error, Exception e)

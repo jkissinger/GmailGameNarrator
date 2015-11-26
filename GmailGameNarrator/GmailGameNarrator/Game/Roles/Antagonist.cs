@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace GmailGameNarrator.Game.Roles
 {
-    class Antagonist : Role
+    public class Antagonist : Role
     {
         public override string Name
         {
@@ -30,7 +30,7 @@ namespace GmailGameNarrator.Game.Roles
             }
         }
 
-        public override int Priority
+        public override int Prevalence
         {
             get
             {
@@ -43,6 +43,14 @@ namespace GmailGameNarrator.Game.Roles
             get
             {
                 return new AntagonistTeam();
+            }
+        }
+
+        public override int NightActionPriority
+        {
+            get
+            {
+                return 3;
             }
         }
 
@@ -67,21 +75,30 @@ namespace GmailGameNarrator.Game.Roles
                     return "";
                 }
             }
-            nominee.IsAlive = false;
+            nominee.Kill(this);
             Gmail.EnqueueMessage(player.Address, game.Subject, Team.Name.b() + " cast out " + nominee.Name.b());
             return nominee.Name.b() + " was caught in a house fire. Their burnt body was found near the stove, making popcorn. Grease fires are " + "so".b() + " dangerous.";
         }
 
         private Player GetNominee(Player player, Game game)
         {
-            string nomineeName = player.NightActions[0].Parameter.GetTextAfter("vote ");
+            string nomineeName = player.Actions[0].Parameter.GetTextAfter("vote ");
             Player newNominee = game.GetPlayerByName(nomineeName);
             return newNominee;
         }
 
         public override string ValidateAction(Player player, Action action, Game game)
         {
-            return Team.ValidateAction(player, action, game);
+            string nomineeName = action.Parameter.GetTextAfter("vote ");
+            Player nominee = game.GetPlayerByName(nomineeName);
+            if (nominee == null) return nomineeName.b() + " is not a valid player in " + game.Title;
+            else if (nominee.Team.Equals(player.Team)) return "You cannot vote for " + nomineeName.b() + ".  They are on your team!";
+            else if (!nominee.IsAlive) return "Vote rejected. " + nomineeName.b() + " is already dead!";
+            else
+            {
+                Gmail.EnqueueMessage(player.Address, game.Subject, "Registered your " + player.Role.Name.b() + " vote for " + nomineeName.b() + ".");
+            }
+            return "";
         }
     }
 }

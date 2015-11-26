@@ -15,7 +15,7 @@ using System.Threading;
 
 namespace GmailGameNarrator
 {
-    class Gmail
+    public class Gmail
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger("System." + System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         static string[] Scopes = { GmailService.Scope.GmailSend, GmailService.Scope.GmailReadonly, GmailService.Scope.GmailModify };
@@ -157,6 +157,11 @@ namespace GmailGameNarrator
             string rawMessage = Convert.ToBase64String(Encoding.UTF8.GetBytes(mm.ToString()));
             rawMessage = rawMessage.Replace('/', '_').Replace('+', '-');
             gMsg.Raw = rawMessage;
+            if (to.ToLower().Contains(Program.UnitTestAddress))
+            {
+                log.Info("Skipping actual send of unit testing email.");
+                return gMsg;
+            }
             return SendMessage(gMsg);
         }
 

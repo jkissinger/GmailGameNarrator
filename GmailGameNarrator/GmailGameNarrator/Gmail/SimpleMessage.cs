@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace GmailGameNarrator
 {
-    class SimpleMessage
+    public class SimpleMessage
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger("System." + System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 

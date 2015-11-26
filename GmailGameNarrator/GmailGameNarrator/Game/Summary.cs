@@ -2,7 +2,7 @@
 
 namespace GmailGameNarrator.Game
 {
-    class Summary
+    public class Summary
     {
         /// <summary>
         /// As game events happen a string is added to this list to record it.

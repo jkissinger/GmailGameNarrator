@@ -1,6 +1,6 @@
 ﻿namespace GmailGameNarrator.Game
 {
-    abstract class Team
+    public abstract class Team
     {
         public abstract string Name { get; }
         public abstract bool KnowsTeammates { get; }
@@ -8,20 +8,12 @@
         /// The minimum percentage of players that must be on the team to be effective.
         /// </summary>
         public abstract int MinPercentComposition { get; }
-
-        public override string ToString()
+        public virtual bool IsMajor
         {
-            return Name;
-        }
-
-        public override bool Equals(object obj)
-        {
-            return obj.ToString().Equals(ToString());
-        }
-
-        public override int GetHashCode()
-        {
-            return ToString().GetHashCode();
+            get
+            {
+                return false;
+            }
         }
 
         public bool HaveIWon(Player player, Game game)
@@ -36,6 +28,25 @@
         public virtual string ValidateAction(Player player, Action action, Game game)
         {
             return "";
+        }
+
+        //==========================
+        //= Object overrides below =
+        //==========================
+
+        public override string ToString()
+        {
+            return Name;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj.ToString().Equals(ToString());
+        }
+
+        public override int GetHashCode()
+        {
+            return ToString().GetHashCode();
         }
     }
 }

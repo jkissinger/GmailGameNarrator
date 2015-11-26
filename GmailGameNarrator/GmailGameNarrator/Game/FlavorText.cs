@@ -10,7 +10,7 @@ namespace GmailGameNarrator.Game
     /// This is intended to be a dynamic class at some point, using a theme and picking random snippets of descriptive text to make the game more varied and fun.
     /// For now it's static.
     /// </summary>
-    class FlavorText
+    public class FlavorText
     {
         public static string GetStartGameMessage()
         {

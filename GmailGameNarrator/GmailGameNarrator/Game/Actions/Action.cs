@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GmailGameNarrator.Game
 {
-    class Action
+    public class Action
     {
         public GameSystem.ActionEnum Name { get; }
         public string Parameter { get; }

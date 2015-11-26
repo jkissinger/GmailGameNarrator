@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using GmailGameNarrator.Game;
 
 namespace GmailGameNarrator
 {
-    static class MathX
+    public static class MathX
     {
         private static Random R = new Random();
         /// <summary>
@@ -33,6 +35,12 @@ namespace GmailGameNarrator
             }
         }
 
+        /// <summary>
+        /// The percentage of total in integer form rounded up.  Example: (100, 20), would return 20, (101, 20), would return 21.
+        /// </summary>
+        /// <param name="total"></param>
+        /// <param name="percentage"></param>
+        /// <returns></returns>
         public static int Percent(int total, int percentage)
         {
             lock (lockRandom)
@@ -41,6 +49,13 @@ namespace GmailGameNarrator
                 if ((total * percentage % 100) > 0) result += 1;
                 return result;
             }
+        }
+
+        public static IEnumerable<Player> RandomizedList(ReadOnlyCollection<Player> players)
+        {
+            List<Player> randomPlayers = new List<Player>();
+            randomPlayers.AddRange(players.OrderBy(x => R.Next()).Take(players.Count));
+            return randomPlayers;
         }
     }
 }

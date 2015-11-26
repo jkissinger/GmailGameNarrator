@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace GmailGameNarrator.Threads
 {
-    abstract class TimerThread
+    public abstract class TimerThread
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger("System." + System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public TaskState State { get; set; }

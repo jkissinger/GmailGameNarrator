@@ -5,12 +5,13 @@ using System.Collections.ObjectModel;
 
 namespace GmailGameNarrator.Game
 {
-    class Player
+    public class Player
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger("System." + System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public string Name { get; }
         public string Address { get; }
-        public bool IsAlive { get; set; }
+        public bool IsAlive { get; private set; }
+        public bool IsProtected { get; set; }
         public Role Role { get; set; }
         public Team Team
         {
@@ -20,20 +21,35 @@ namespace GmailGameNarrator.Game
             }
         }
         public Vote Vote { get; set; }
-        public ReadOnlyCollection<Action> NightActions
+        //GAME Switch this to Actions, and then have each role check the game's cycle, to validate.  Then have "DoNightActions" kick off every cycle, again checking the cycle in the role.
+        public ReadOnlyCollection<Action> Actions
         {
             get
             {
-                return new ReadOnlyCollection<Action>(MyNightActions);
+                return new ReadOnlyCollection<Action>(MyActions);
             }
         }
-        private IList<Action> MyNightActions = new List<Action>();
+        private IList<Action> MyActions = new List<Action>();
 
         public Player(string name, string address)
         {
             Name = name;
             Address = address.Trim().ToLowerInvariant();
             IsAlive = true;
+        }
+
+        public void Kill(Role killerRole)
+        {
+            if (!IsProtected)
+            {
+                Role.KilledBy(killerRole);
+                IsAlive = false;
+            }
+        }
+
+        public void Quit()
+        {
+            IsAlive = false;
         }
 
         public bool HaveIWon(Game game)
@@ -46,20 +62,22 @@ namespace GmailGameNarrator.Game
             string result = Role.ValidateAction(this, action, game);
             if (String.IsNullOrEmpty(result))
             {
-                MyNightActions.Add(action);
+                MyActions.Add(action);
             }
             return result;
         }
 
-        public string DoNightActions(Game game)
+        public string DoActions(Game game)
         {
-            string result = Role.DoNightActions(this, game);
+            string result = "";
+            if (game.ActiveCycle == Game.Cycle.Night) Role.DoNightActions(this, game);
+            if (game.ActiveCycle == Game.Cycle.Day) Role.DoDayActions(this, game);
             return result;
         }
 
         public void ClearNightActions()
         {
-            MyNightActions.Clear();
+            MyActions.Clear();
         }
 
         //==========================

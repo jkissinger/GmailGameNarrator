@@ -125,9 +125,12 @@
     <Compile Include="Game\Player.cs" />
     <Compile Include="Game\Roles\Antagonist.cs" />
     <Compile Include="Game\Roles\Healer.cs" />
+    <Compile Include="Game\Roles\Investigator.cs" />
+    <Compile Include="Game\Roles\Wannabe.cs" />
     <Compile Include="Game\Roles\Sheeple.cs" />
     <Compile Include="Game\Roles\Role.cs" />
     <Compile Include="Game\Summary.cs" />
+    <Compile Include="Game\Teams\SoloTeam.cs" />
     <Compile Include="Game\Teams\Team.cs" />
     <Compile Include="Game\Teams\AntagonistTeam.cs" />
     <Compile Include="Game\Teams\SheepleTeam.cs" />
