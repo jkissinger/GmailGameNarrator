@@ -86,6 +86,7 @@ namespace GmailGameNarrator.Game.Roles
                         Player newNominee2 = GetNominee(t, game);
                         nominations.Add(t2.Name.b() + " voted for: " + newNominee2.Name.b());
                     }
+                    //BUG This showed when there was a consensus
                     string message = "The " + Team.Name.b() + " didn't have a consensus! You cast out nobody!<br /><br />Team voting results:<br />" + nominations.HtmlBulletList();
                     game.Summary.AddEvent(message.tag("li"));
                     Gmail.EnqueueMessage(player.Address, game.Subject, message);

@@ -288,14 +288,10 @@ namespace GmailGameNarrator.Game
         /// <param name="roleTypes">List of available roles, by class type</param>
         private void AssignRole(Player player, Team team, bool thisTeam, List<Type> roleTypes)
         {
-            player.Role = GetRandomRole(roleTypes);
-            while (!ValidRole(team, player, thisTeam))
-            {
-                player.Role = GetRandomRole(roleTypes);
-            }
+            player.Role = GetRandomRole(roleTypes, team, thisTeam);
         }
 
-        private bool ValidRole(Team team, Player player, bool thisTeam)
+        private bool ValidTeam(Team team, Role role, bool thisTeam)
         {
             //Whether or not any team is allowed
             bool anyTeam = team == null;
@@ -303,9 +299,36 @@ namespace GmailGameNarrator.Game
             if (!anyTeam)
             {
                 //Any team is not allowed; check that the team is valid
-                teamIsValid = player.Team.Equals(team) && thisTeam || !player.Team.Equals(team) && !thisTeam;
+                teamIsValid = role.Team.Equals(team) && thisTeam || !role.Team.Equals(team) && !thisTeam;
             }
             return teamIsValid;
+        }
+
+        //GAME Only choose from roles that are not at their max
+        private Role GetRandomRole(List<Type> roleTypes, Team team, bool thisTeam)
+        {
+            Type type = (Type)GetAllowedRoles(roleTypes, team, thisTeam).PickOne();
+            Role role = (Role)Activator.CreateInstance(type);
+            return role;
+        }
+
+        public List<Type> GetAllowedRoles(List<Type> roleTypes, Team team, bool thisTeam)
+        {
+            List<Type> allowedRoles = new List<Type>();
+            allowedRoles.AddRange(roleTypes);
+            for (int i = roleTypes.Count - 1; i >= 0; i--)
+            {
+                Role role = (Role)Activator.CreateInstance(roleTypes[i]);
+                if (MaxPlayersForRoleReached(role))
+                {
+                    allowedRoles.RemoveAt(i);
+                }
+                else if (!ValidTeam(team, role, thisTeam))
+                {
+                    allowedRoles.RemoveAt(i);
+                }
+            }
+            return allowedRoles;
         }
 
         /// <summary>
@@ -313,30 +336,19 @@ namespace GmailGameNarrator.Game
         /// </summary>
         /// <param name="role"></param>
         /// <returns>True if either property is exceeded, false otherwise.</returns>
-        private bool MaxPlayersForRoleReached(Role role)
+        public bool MaxPlayersForRoleReached(Role role)
         {
-            int playerCount = GetCountOfPlayersWithRole(role);
+            int playerCount = GetCountOfPlayersWithRole(role)+1;
             int maxPercent = MathX.Percent(Players.Count, role.MaxPercentage);
-            int maxCount = role.MaxPlayers;
             //1 player is okay for any role
             if (playerCount == 1) return false;
-            if (playerCount >= maxPercent || playerCount >= maxCount) return true;
+            if (playerCount >= maxPercent || playerCount >= role.MaxPlayers)
+            {
+                return true;
+            }
             return false;
         }
 
-        //GAME Only choose from roles that are not at their max
-        private Role GetRandomRole(List<Type> roleTypes)
-        {
-            List<Type> disallowedRoles = new List<Type>();
-            for(int i =0;i<roleTypes.Count;i++)
-            {
-                if (MaxPlayersForRoleReached((Role)Activator.CreateInstance(roleTypes[i]))) disallowedRoles.Add(roleTypes[i]);
-            }
-            Type type = (Type)roleTypes.Except(disallowedRoles).PickOne();
-            Role role = (Role)Activator.CreateInstance(type);
-            return role;
-        }
-        
 
         private string ListTeammates(Player player)
         {

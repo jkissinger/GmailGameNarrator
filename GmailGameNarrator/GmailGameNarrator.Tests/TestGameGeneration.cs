@@ -26,7 +26,7 @@ namespace GmailGameNarrator.Tests
                         game.AddPlayer(players[j]);
                     }
                     List<Type> roleTypes = gameSystem.GetRoleTypes();
-                    game.AssignRoles(roleTypes);
+                    game.Start();
                     Assert.IsTrue(ValidateRoleMaxCount(game));
                     Assert.IsTrue(ValidateRoleMaxPercentage(game));
                     Assert.IsTrue(ValidateTeamMinPercent(game));
@@ -70,6 +70,11 @@ namespace GmailGameNarrator.Tests
             return true;
         }
 
+        /// <summary>
+        /// Validates no more than the maximum count is made of the given role.  Even if the maximum is less than or = 1, 1 player of any role is allowed.
+        /// </summary>
+        /// <param name="game"></param>
+        /// <returns></returns>
         private bool ValidateRoleMaxCount(Game.Game game)
         {
             foreach (Role r in game.GetPlayingRoles())
@@ -79,11 +84,19 @@ namespace GmailGameNarrator.Tests
                 {
                     if (p.Role.Equals(r)) count++;
                 }
-                if (count > r.MaxPlayers) return false;
+                if (count > r.MaxPlayers && count > 1)
+                {
+                    return false;
+                }
             }
             return true;
         }
 
+        /// <summary>
+        /// Validates no more than the maximum percentage is made of the given role.  Even if the maximum is less than or = 1, 1 player of any role is allowed.
+        /// </summary>
+        /// <param name="game"></param>
+        /// <returns></returns>
         private bool ValidateRoleMaxPercentage(Game.Game game)
         {
             foreach (Role r in game.GetPlayingRoles())
@@ -94,7 +107,10 @@ namespace GmailGameNarrator.Tests
                     if (p.Role.Equals(r)) count++;
                 }
                 int maxPercent = MathX.Percent(game.Players.Count, r.MaxPercentage);
-                if (count > maxPercent) return false;
+                if (count > maxPercent && count > 1)
+                {
+                    return false;
+                }
             }
             return true;
         }
