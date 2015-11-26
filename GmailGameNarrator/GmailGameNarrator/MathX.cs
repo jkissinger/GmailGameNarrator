@@ -9,30 +9,42 @@ namespace GmailGameNarrator
 {
     public static class MathX
     {
-        private static Random R = new Random();
+        private static Random DoNotUseThisRandom = new Random();
         /// <summary>
-        /// Random is not documented as thread safe so there are thread locks on the methods using <see cref="R"/>
+        /// Random is not documented as thread safe so there are thread locks on the methods using <see cref="Rand"/>
         /// </summary>
         static object lockRandom = new object();
 
+        /// <summary>
+        /// On second thought, not sure this works, need to investigate.
+        /// </summary>
+        /// TODO: Investigate if this is thread safe
+        private static Random Rand
+        {
+            get
+            {
+                lock (lockRandom)
+                {
+                    return DoNotUseThisRandom;
+                }
+            }
+        }
+
         public static object PickOne(this IEnumerable<object> objs)
         {
-            int idx = R.Next(0, objs.Count());
+            int idx = Rand.Next(0, objs.Count() - 1);
             return objs.ElementAt(idx);
         }
 
         public static string RandomString(int length)
         {
-            lock (lockRandom)
+            StringBuilder b = new StringBuilder();
+            for (int i = 0; i < length; i++)
             {
-                StringBuilder b = new StringBuilder();
-                for (int i = 0; i < length; i++)
-                {
-                    b.Append(((char)R.Next('A', 'Z')).ToString());
-                    b.Append(((char)R.Next('a', 'z')).ToString());
-                }
-                return b.ToString();
+                b.Append(((char)Rand.Next('A', 'Z')).ToString());
+                b.Append(((char)Rand.Next('a', 'z')).ToString());
             }
+            return b.ToString();
         }
 
         /// <summary>
@@ -43,18 +55,15 @@ namespace GmailGameNarrator
         /// <returns></returns>
         public static int Percent(int total, int percentage)
         {
-            lock (lockRandom)
-            {
-                int result = total * percentage / 100;
-                if ((total * percentage % 100) > 0) result += 1;
-                return result;
-            }
+            int result = total * percentage / 100;
+            if ((total * percentage % 100) > 0) result += 1;
+            return result;
         }
 
         public static IEnumerable<Player> RandomizedList(ReadOnlyCollection<Player> players)
         {
             List<Player> randomPlayers = new List<Player>();
-            randomPlayers.AddRange(players.OrderBy(x => R.Next()).Take(players.Count));
+            randomPlayers.AddRange(players.OrderBy(x => Rand.Next()).Take(players.Count));
             return randomPlayers;
         }
     }

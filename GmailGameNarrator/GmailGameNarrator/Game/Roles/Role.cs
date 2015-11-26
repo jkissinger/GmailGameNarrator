@@ -35,13 +35,28 @@ namespace GmailGameNarrator.Game.Roles
             }
         }
         /// <summary>
+        /// The priority for night actions, between 0 and 4, first processed is 0, last 4.
+        /// </summary>
+        public virtual bool IsKiller
+        {
+            get
+            {
+                return false;
+            }
+        }
+        /// <summary>
         /// Likelihood of assigning this role, to make the more fun roles more likely to be picked.  Must be at least 1.
         /// </summary>
         public abstract int Prevalence { get; }
         public abstract string Instructions { get; }
 
         public virtual void KilledBy(Role role) { }
-
+        public virtual string ActionText
+        {
+            get{
+                return "";
+            }
+        }
         public virtual string ValidateAction(Player player, Action action, Game game)
         {
             return "";

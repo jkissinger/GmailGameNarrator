@@ -13,11 +13,12 @@ namespace GmailGameNarrator.Game.Roles
             }
         }
 
+        //TODO Have this use team maxpercentage
         public override int MaxPercentage
         {
             get
             {
-                return 100;
+                return 80;
             }
         }
 

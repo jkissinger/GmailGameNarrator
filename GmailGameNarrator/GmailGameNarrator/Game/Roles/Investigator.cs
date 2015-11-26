@@ -42,7 +42,12 @@
             }
         }
 
-        private string ActionText = "check";
+        public override string ActionText {
+            get
+            {
+                return "check";
+            }
+        }
 
         public override string Instructions
         {

@@ -16,7 +16,7 @@
             }
         }
 
-        public bool HaveIWon(Player player, Game game)
+        public virtual bool HaveIWon(Player player, Game game)
         {
             foreach (Player p in game.Players)
             {

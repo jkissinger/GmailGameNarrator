@@ -16,5 +16,10 @@ namespace GmailGameNarrator.Game
             Name = actionEnum;
             Parameter = parameter;
         }
+
+        public override string ToString()
+        {
+            return Name.ToString() + " " + Parameter;
+        }
     }
 }

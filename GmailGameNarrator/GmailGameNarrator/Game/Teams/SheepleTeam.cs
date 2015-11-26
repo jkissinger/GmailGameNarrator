@@ -30,5 +30,14 @@
         {
             get { return "Town"; }
         }
+
+        public override bool HaveIWon(Player player, Game game)
+        {
+            foreach (Player p in game.Players)
+            {
+                if (p.IsAlive && p.Role.IsKiller) return false;
+            }
+            return true;
+        }
     }
 }

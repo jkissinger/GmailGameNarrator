@@ -48,6 +48,14 @@ namespace GmailGameNarrator.Game.Roles
             }
         }
 
+        public override string ActionText
+        {
+            get
+            {
+                return "protect";
+            }
+        }
+
         public override string Instructions
         {
             get

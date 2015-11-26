@@ -7,18 +7,18 @@ using System;
 namespace GmailGameNarrator.Tests
 {
     [TestClass]
-    public class TestRoleGeneration
+    public class TestGameGeneration
     {
         private static GameSystem gameSystem = GameSystem.Instance;
 
         [TestMethod]
-        public void TestGameGeneration()
+        public void GameGenerationTest()
         {
             for (int tests = 0; tests < 100; tests++)
             {
                 for (int i = 3; i < 25; i = i + 3)
                 {
-                    List<Player> players = GenListOfPlayers(i);
+                    List<Player> players = TestX.GenListOfPlayers(i);
                     Game.Game game = new Game.Game(gameSystem.GetNextGameId(), players[0]);
                     Assert.IsTrue(validateTeamComposition(game));
                     for (int j = 1; j < players.Count; j++)
@@ -32,18 +32,6 @@ namespace GmailGameNarrator.Tests
                     Assert.IsTrue(ValidateTeamMinPercent(game));
                 }
             }
-        }
-        private List<Player> GenListOfPlayers(int size)
-        {
-            List<Player> players = new List<Player>();
-            for (int i = 0; i < size; i++)
-            {
-                string name = "Player" + i;
-                string address = "Player" + i + Program.UnitTestAddress;
-                Player player = new Player(name, address);
-                players.Add(player);
-            }
-            return players;
         }
 
         /// <summary>
@@ -105,41 +93,10 @@ namespace GmailGameNarrator.Tests
                 {
                     if (p.Role.Equals(r)) count++;
                 }
-                int minPercent = MathX.Percent(game.Players.Count, r.MaxPercentage);
-                if (count > minPercent) return false;
+                int maxPercent = MathX.Percent(game.Players.Count, r.MaxPercentage);
+                if (count > maxPercent) return false;
             }
             return true;
         }
-
-        [TestMethod]
-        public void TestGameOver()
-        {
-            for (int tests = 0; tests < 1; tests++)
-            {
-                for (int i = 3; i < 4; i = i + 3)
-                {
-                    List<Player> players = GenListOfPlayers(i);
-                    Game.Game game = new Game.Game(gameSystem.GetNextGameId(), players[0]);
-                    for (int j = 1; j < players.Count; j++)
-                    {
-                        game.AddPlayer(players[j]);
-                    }
-                    List<Type> roleTypes = gameSystem.GetRoleTypes();
-                    game.AssignRoles(roleTypes);
-                    KillPlayers(players);
-                    Assert.IsTrue(game.CheckGameEnd("Test"));
-                }
-            }
-        }
-
-        public void KillPlayers(List<Player> players)
-        {
-            for(int i = 1; i < players.Count; i++)
-            {
-                players[i].Kill(null);
-            }
-        }
-
-        
     }
 }

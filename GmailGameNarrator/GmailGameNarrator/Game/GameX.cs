@@ -54,6 +54,22 @@ namespace GmailGameNarrator.Game
             return players;
         }
 
+        public static string ListPlayersForSummary(this Game game)
+        {
+            string players = "<ul>";
+            foreach (Player player in game.Players)
+            {
+                string livingState = " - Dead";
+                if (player.IsAlive)
+                {
+                    livingState = " - <b>Alive</b>";
+                }
+                players += (player + " as " + player.Role + " for " + player.Team + livingState).tag("li");
+            }
+            players = players + "</ul>";
+            return players;
+        }
+
         /// <summary>
         /// Sends a message to the given player listing all their available commands for the given game.
         /// </summary>

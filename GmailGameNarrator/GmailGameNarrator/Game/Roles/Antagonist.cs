@@ -26,7 +26,7 @@ namespace GmailGameNarrator.Game.Roles
         {
             get
             {
-                return 1000;
+                return 40;
             }
         }
 
@@ -54,6 +54,22 @@ namespace GmailGameNarrator.Game.Roles
             }
         }
 
+        public override bool IsKiller
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public override string ActionText
+        {
+            get
+            {
+                return "vote";
+            }
+        }
+
         public override string DoNightActions(Player player, Game game)
         {
             Player nominee = null;
@@ -70,13 +86,17 @@ namespace GmailGameNarrator.Game.Roles
                         Player newNominee2 = GetNominee(t, game);
                         nominations.Add(t2.Name.b() + " voted for: " + newNominee2.Name.b());
                     }
-                    Gmail.EnqueueMessage(player.Address, game.Subject, "The " + Team.Name.b() + " didn't have a consensus! You cast out nobody!<br /><br />Team voting results:<br />" + nominations.HtmlBulletList());
+                    string message = "The " + Team.Name.b() + " didn't have a consensus! You cast out nobody!<br /><br />Team voting results:<br />" + nominations.HtmlBulletList();
+                    game.Summary.AddEvent(message.tag("li"));
+                    Gmail.EnqueueMessage(player.Address, game.Subject, message);
 
                     return "";
                 }
             }
             nominee.Kill(this);
-            Gmail.EnqueueMessage(player.Address, game.Subject, Team.Name.b() + " cast out " + nominee.Name.b());
+            string msg = Team.Name.b() + " cast out " + nominee.Name.b();
+            game.Summary.AddUniqueEvent(msg.tag("li"));
+            Gmail.EnqueueMessage(player.Address, game.Subject, msg);
             return nominee.Name.b() + " was caught in a house fire. Their burnt body was found near the stove, making popcorn. Grease fires are " + "so".b() + " dangerous.";
         }
 

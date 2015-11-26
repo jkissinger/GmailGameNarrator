@@ -1,6 +1,7 @@
 ﻿using GmailGameNarrator.Game;
 using GmailGameNarrator.Threads;
 using System;
+using System.IO;
 
 [assembly: log4net.Config.XmlConfigurator(Watch = true)]
 
@@ -8,6 +9,11 @@ namespace GmailGameNarrator
 {
     public class Program
     {
+#if DEBUG
+        public static readonly string BaseDir = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\..\\..\\"));
+#else
+        public static readonly string BaseDir = AppDomain.CurrentDomain.BaseDirectory;
+#endif
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger("System." + System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public static bool running = true;
         public static readonly int CheckMessagesInterval = 5;

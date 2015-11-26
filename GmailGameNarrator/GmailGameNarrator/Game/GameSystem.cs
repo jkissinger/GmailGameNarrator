@@ -102,7 +102,7 @@ namespace GmailGameNarrator.Game
             return player;
         }
 
-        public bool DoAction(Game game, Player player, Action action)
+        public void DoAction(Game game, Player player, Action action)
         {
             if (action.Name == ActionEnum.JoinAs)
             {
@@ -119,7 +119,6 @@ namespace GmailGameNarrator.Game
             else if (action.Name == ActionEnum.Role) RoleAction(player, action, game);
             //if (action.Name == ActionEnum.Kick) Kick(player, action, game);
             //if (action.Name == ActionEnum.Ban) Ban(player, action, game);
-            return false;
         }
 
         private void RoleAction(Player player, Action action, Game game)
@@ -128,7 +127,15 @@ namespace GmailGameNarrator.Game
             if (!String.IsNullOrEmpty(result))
             {
                 HandleBadAction(game.Subject, player, action, result);
+                return;
             }
+            List<string> actions = new List<string>();
+            foreach(Action a in player.Actions)
+            {
+                actions.Add(player.Role.Name.b() + a.Parameter);
+            }
+            Gmail.EnqueueMessage(player.Address, game.Subject, "Your registered actions:<br />" + actions.HtmlBulletList());
+            game.CheckEndOfCycle();
         }
 
         private void Vote(Player player, Action action, Game game)

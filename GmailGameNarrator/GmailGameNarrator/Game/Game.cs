@@ -37,9 +37,16 @@ namespace GmailGameNarrator.Game
                 return Enum.GetName(typeof(Cycle), ActiveCycle) + " " + RoundCounter;
             }
         }
+        public string FullTitle
+        {
+            get
+            {
+                return Title + " - " + CycleTitle;
+            }
+        }
         private bool AnonymousVoting = false;
         //FEATURE Implement summary functionality
-        private Summary summary = new Summary();
+        public Summary Summary;
 
         public Game(int id, Player overlord)
         {
@@ -47,6 +54,7 @@ namespace GmailGameNarrator.Game
             Overlord = overlord;
             MyPlayers.Add(overlord);
             isInProgress = false;
+            Summary = new Summary(this);
         }
 
         public bool IsInProgress()
@@ -139,6 +147,7 @@ namespace GmailGameNarrator.Game
 
         private void NextCycle()
         {
+            Summary.EndCycle();
             if (ActiveCycle == Cycle.Day)
             {
                 MyCycle = Cycle.Night;
@@ -155,6 +164,7 @@ namespace GmailGameNarrator.Game
                 p.ClearNightActions();
                 p.IsProtected = false;
             }
+            Summary.NewCycle(this);
         }
 
         public bool Start()
@@ -185,6 +195,8 @@ namespace GmailGameNarrator.Game
                 body += FlavorText.Divider + this.Help(p);
                 Gmail.EnqueueMessage(p.Address, Subject, body);
             }
+
+            Summary.NewCycle(this);
 
             return true;
         }
@@ -293,8 +305,7 @@ namespace GmailGameNarrator.Game
                 //Any team is not allowed; check that the team is valid
                 teamIsValid = player.Team.Equals(team) && thisTeam || !player.Team.Equals(team) && !thisTeam;
             }
-            bool roleIsValid = !MaxPlayersForRoleReached(player.Role);
-            return teamIsValid && roleIsValid;
+            return teamIsValid;
         }
 
         /// <summary>
@@ -305,16 +316,23 @@ namespace GmailGameNarrator.Game
         private bool MaxPlayersForRoleReached(Role role)
         {
             int playerCount = GetCountOfPlayersWithRole(role);
-            int minPercent = MathX.Percent(Players.Count, role.MaxPercentage);
-            int minCount = role.MaxPlayers;
-            if (playerCount > minPercent || playerCount > minCount) return true;
+            int maxPercent = MathX.Percent(Players.Count, role.MaxPercentage);
+            int maxCount = role.MaxPlayers;
+            //1 player is okay for any role
+            if (playerCount == 1) return false;
+            if (playerCount >= maxPercent || playerCount >= maxCount) return true;
             return false;
         }
 
-
+        //GAME Only choose from roles that are not at their max
         private Role GetRandomRole(List<Type> roleTypes)
         {
-            Type type = (Type)roleTypes.PickOne();
+            List<Type> disallowedRoles = new List<Type>();
+            for(int i =0;i<roleTypes.Count;i++)
+            {
+                if (MaxPlayersForRoleReached((Role)Activator.CreateInstance(roleTypes[i]))) disallowedRoles.Add(roleTypes[i]);
+            }
+            Type type = (Type)roleTypes.Except(disallowedRoles).PickOne();
             Role role = (Role)Activator.CreateInstance(type);
             return role;
         }
@@ -371,22 +389,29 @@ namespace GmailGameNarrator.Game
                 if (c.Value >= max) electee = c.Key;
                 if (AnonymousVoting) votingResults.Add(c.Key.Name + ": " + c.Value);
             }
+            string voteMessage = "";
             //The first 2 if statements can't trigger a game end condition because no one dies.
             if (electee == null)
             {
-                ShowVotes(votingResults, "There was no majority vote.");
+                voteMessage = "There was no majority vote.";
             }
             else if (electee.Name.ToLowerInvariant().Equals("no one"))
             {
-                ShowVotes(votingResults, "The majority vote was for no one, everyone is safe today.  But, at least one of you will probably regret it tonight...");
+                voteMessage = "The majority vote was for no one, everyone is safe today.  But, at least one of you will probably regret it tonight...";
             }
             else
             {
                 //Mark electee as dead then check if the game is over
                 electee.Kill(null);
-                if (CheckGameEnd("Results of the last vote:<br />" + votingResults.HtmlBulletList())) return;
-                ShowVotes(votingResults, String.Format(FlavorText.PlayerOutcastMessage, electee.Name.b()));
+                voteMessage = String.Format(FlavorText.PlayerOutcastMessage, electee.Name.b());                
             }
+            Summary.AddEvent("Voting Results:");
+            Summary.AddEvent(voteMessage);
+            Summary.AddDetailEvent(votingResults.HtmlBulletList());
+            ShowVotes(votingResults, voteMessage);
+            //I don't think there's any reason not to show voting results before checking game end?
+            //if (CheckGameEnd("Results of the last vote:<br />" + votingResults.HtmlBulletList())) return;
+            if (CheckGameEnd()) return;
             foreach (Player p in Players)
             {
                 string message = p.Role.Instructions;
@@ -394,6 +419,8 @@ namespace GmailGameNarrator.Game
                 if (p.Team.KnowsTeammates && !String.IsNullOrEmpty(teammates)) message += FlavorText.Divider + teammates;
                 if (p.IsAlive) Gmail.EnqueueMessage(p.Address, Subject, message);
             }
+           
+
         }
 
         private void ShowVotes(List<string> votingResults, string resultMessage)
@@ -414,7 +441,7 @@ namespace GmailGameNarrator.Game
             {
                 foreach (Player p in Players)
                 {
-                    if (p.Role.NightActionPriority == i)
+                    if (p.IsAlive && p.Role.NightActionPriority == i)
                     {
                         string msg = p.DoActions(this);
                         if (!String.IsNullOrEmpty(msg) && !nightSummary.Contains(msg)) nightSummary.Add(msg);
@@ -427,7 +454,8 @@ namespace GmailGameNarrator.Game
             else message = "it was completely uneventful.";
             MessageAllPlayers(message);
 
-            CheckGameEnd("");
+            CheckGameEnd();
+            NextCycle();
         }
 
         public List<Player> GetLivingPlayersOnMyTeam(Player player)
@@ -445,7 +473,7 @@ namespace GmailGameNarrator.Game
             return pList;
         }
 
-        public bool CheckGameEnd(string finalMessage)
+        public bool CheckGameEnd()
         {
             List<Player> winners = new List<Player>();
             foreach (Player p in Players)
@@ -454,13 +482,13 @@ namespace GmailGameNarrator.Game
             }
             if (winners.Count > 0)
             {
-                GameOver(winners, finalMessage);
+                GameOver(winners);
                 return true;
             }
             return false;
         }
 
-        private void GameOver(List<Player> winners, string finalMessage)
+        private void GameOver(List<Player> winners)
         {
             List<string> winnersList = new List<string>();
             foreach (Player w in winners)
@@ -475,12 +503,15 @@ namespace GmailGameNarrator.Game
                 string msg = StringX.b(o.Name) + " as " + StringX.b(o.Role.Name) + " for the " + StringX.b(o.Team.Name);
                 othersList.Add(msg);
             }
-            string message = "The game is over.  Winners:<br />";
+            isInProgress = false;
+            string message = "The game is over.  Winners:".tag("li");
             message += winnersList.HtmlBulletList();
-            message += "Everyone else:<br />";
+            message += "Everyone else:".tag("li");
             message += othersList.HtmlBulletList();
-            message += finalMessage;
-            MessageAllPlayers(message);
+            Summary.EndCycle();
+            Summary.AddEvent(message);
+            MessageAllPlayers(message.tag("ul"));
+            Summary.GameOver(this);
             GameSystem.Instance.RemoveGame(this);
         }
 
