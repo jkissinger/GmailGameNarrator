@@ -28,7 +28,7 @@ namespace GmailGameNarrator.Tests
                         game.AddPlayer(players[j]);
                     }
                     Assert.IsTrue(game.Start());
-                    while (!game.CheckGameEnd())
+                    while (!game.IsGameOver())
                     {
                         KillNextPlayer(players);
                     }

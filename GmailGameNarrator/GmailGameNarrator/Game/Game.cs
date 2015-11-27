@@ -92,6 +92,16 @@ namespace GmailGameNarrator.Game
             return count;
         }
 
+        public List<Player> GetLivingPlayers()
+        {
+            List<Player> players = new List<Player>();
+            foreach(Player p in Players)
+            {
+                if (p.IsAlive) players.Add(p);
+            }
+            return players;
+        }
+
         public Player GetPlayerByName(string name)
         {
             foreach (Player p in Players)
@@ -387,12 +397,15 @@ namespace GmailGameNarrator.Game
             List<Player> candidates = new List<Player>();
             foreach (Player p in Players)
             {
-                candidates.Add(p.Vote.Candidate);
-                if (!AnonymousVoting) votingResults.Add(p.Name.b() + " voted for: " + p.Vote.Candidate.Name.i());
+                if (p.IsAlive)
+                {
+                    candidates.Add(p.Vote.Candidate);
+                    if (!AnonymousVoting) votingResults.Add(p.Name.b() + " voted for: " + p.Vote.Candidate.Name.i());
+                }
             }
             Dictionary<Player, int> candidateCounts = candidates.GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
             //Get 50% of players rounded up, the minimum for a majority
-            int max = MathX.Percent(Players.Count, 50);
+            int max = MathX.Percent(GetLivingPlayers().Count, 51);
             Player electee = null;
             //Tally votes
             foreach (KeyValuePair<Player, int> c in candidateCounts)
@@ -423,7 +436,7 @@ namespace GmailGameNarrator.Game
             ShowVotes(votingResults, voteMessage);
             //I don't think there's any reason not to show voting results before checking game end?
             //if (CheckGameEnd("Results of the last vote:<br />" + votingResults.HtmlBulletList())) return;
-            if (CheckGameEnd()) return;
+            if (IsGameOver()) return;
             foreach (Player p in Players)
             {
                 string message = p.Role.Instructions;
@@ -466,8 +479,9 @@ namespace GmailGameNarrator.Game
             else message = "it was completely uneventful.";
             MessageAllPlayers(message);
 
-            CheckGameEnd();
-            NextCycle();
+            if(!IsGameOver()) {
+                NextCycle();
+            }            
         }
 
         public List<Player> GetLivingPlayersOnMyTeam(Player player)
@@ -485,7 +499,7 @@ namespace GmailGameNarrator.Game
             return pList;
         }
 
-        public bool CheckGameEnd()
+        public bool IsGameOver()
         {
             List<Player> winners = new List<Player>();
             foreach (Player p in Players)

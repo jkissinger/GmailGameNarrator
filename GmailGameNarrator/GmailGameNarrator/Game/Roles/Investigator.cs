@@ -62,6 +62,7 @@
             string nomineeName = player.Actions[0].Parameter.GetTextAfter(ActionText + " ");
             Player nominee = game.GetPlayerByName(nomineeName);
             Gmail.EnqueueMessage(player.Address, game.Subject, "You have investigated " + nominee.Name.b() + " and determined their allegiance is with the " + nominee.Team.b());
+            game.Summary.AddEvent((player.Name.b() + " investigated " + nominee.Name.b() + ". And found out their allegiance is with the " + nominee.Team.b()).tag("li"));
             return "";
         }
 

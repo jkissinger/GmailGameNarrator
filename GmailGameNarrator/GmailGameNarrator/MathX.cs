@@ -9,30 +9,17 @@ namespace GmailGameNarrator
 {
     public static class MathX
     {
-        private static Random DoNotUseThisRandom = new Random();
+        private static Random r = new Random();
         /// <summary>
-        /// Random is not documented as thread safe so there are thread locks on the methods using <see cref="Rand"/>
+        /// Random is not documented as thread safe so there are thread locks on the methods using <see cref="r"/>
         /// </summary>
         static object lockRandom = new object();
 
-        /// <summary>
-        /// On second thought, not sure this works, need to investigate.
-        /// </summary>
-        /// TODO: Investigate if this is thread safe
-        private static Random Rand
-        {
-            get
-            {
-                lock (lockRandom)
-                {
-                    return DoNotUseThisRandom;
-                }
-            }
-        }
-
         public static object PickOne(this IEnumerable<object> objs)
         {
-            int idx = Rand.Next(0, objs.Count() - 1);
+            //The upper bound of Random.Next is exclusive
+            int max = objs.Count();
+            int idx = r.Next(0, max);
             return objs.ElementAt(idx);
         }
 
@@ -41,8 +28,8 @@ namespace GmailGameNarrator
             StringBuilder b = new StringBuilder();
             for (int i = 0; i < length; i++)
             {
-                b.Append(((char)Rand.Next('A', 'Z')).ToString());
-                b.Append(((char)Rand.Next('a', 'z')).ToString());
+                b.Append(((char)r.Next('A', 'Z')).ToString());
+                b.Append(((char)r.Next('a', 'z')).ToString());
             }
             return b.ToString();
         }
@@ -63,7 +50,7 @@ namespace GmailGameNarrator
         public static IEnumerable<Player> RandomizedList(ReadOnlyCollection<Player> players)
         {
             List<Player> randomPlayers = new List<Player>();
-            randomPlayers.AddRange(players.OrderBy(x => Rand.Next()).Take(players.Count));
+            randomPlayers.AddRange(players.OrderBy(x => r.Next()).Take(players.Count));
             return randomPlayers;
         }
     }

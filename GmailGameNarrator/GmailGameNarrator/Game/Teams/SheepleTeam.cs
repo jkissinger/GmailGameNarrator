@@ -35,7 +35,7 @@
         {
             foreach (Player p in game.Players)
             {
-                if (p.IsAlive && p.Role.IsKiller) return false;
+                if (p.IsAlive && p.Role.IsKiller && !p.Team.Equals(player.Team)) return false;
             }
             return true;
         }

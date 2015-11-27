@@ -80,25 +80,40 @@ namespace GmailGameNarrator.Game.Roles
                 if (nominee == null) nominee = newNominee;
                 else if (!nominee.Equals(newNominee))
                 {
-                    List<string> nominations = new List<string>();
-                    foreach(Player t2 in teammates)
-                    {
-                        Player newNominee2 = GetNominee(t, game);
-                        nominations.Add(t2.Name.b() + " voted for: " + newNominee2.Name.b());
-                    }
+                    List<string> nominations = GetNominations(teammates, game);
                     //BUG This showed when there was a consensus
-                    string message = "The " + Team.Name.b() + " didn't have a consensus! You cast out nobody!<br /><br />Team voting results:<br />" + nominations.HtmlBulletList();
-                    game.Summary.AddEvent(message.tag("li"));
+                    string message = game.CycleTitle + " - The " + Team.Name.b() + " didn't have a consensus! You cast out nobody!<br />" + "Team voting results:<br />" + nominations.HtmlBulletList();
+                    game.Summary.AddUniqueEvent(message.tag("li"));
                     Gmail.EnqueueMessage(player.Address, game.Subject, message);
 
                     return "";
                 }
             }
-            nominee.Kill(this);
-            string msg = Team.Name.b() + " cast out " + nominee.Name.b();
-            game.Summary.AddUniqueEvent(msg.tag("li"));
-            Gmail.EnqueueMessage(player.Address, game.Subject, msg);
-            return nominee.Name.b() + " was caught in a house fire. Their burnt body was found near the stove, making popcorn. Grease fires are " + "so".b() + " dangerous.";
+            if (nominee.Kill(this))
+            {
+                string msg = game.CycleTitle + " - The " + Team.Name.b() + " cast out " + nominee.Name.b();
+                game.Summary.AddUniqueEvent(msg.tag("li"));
+                Gmail.EnqueueMessage(player.Address, game.Subject, msg);
+                return nominee.Name.b() + " was caught in a house fire. Their burnt body was found near the stove, making popcorn. Grease fires are " + "so".b() + " dangerous.";
+            }
+            else
+            {
+                string msg = game.CycleTitle + " - The " + Team.Name.b() + " cast out " + nominee.Name.b() + " but they survived.";
+                game.Summary.AddUniqueEvent(msg.tag("li"));
+                Gmail.EnqueueMessage(player.Address, game.Subject, msg);
+                return nominee.Name.b() + "'s house burnt down. But somehow they survived!";
+            }
+        }
+
+        private List<string> GetNominations(List<Player> teammates, Game game)
+        {
+            List<string> nominations = new List<string>();
+            foreach (Player teammate in teammates)
+            {
+                Player newNominee2 = GetNominee(teammate, game);
+                nominations.Add(teammate.Name.b() + " voted for: " + newNominee2.Name.b());
+            }
+            return nominations;
         }
 
         private Player GetNominee(Player player, Game game)

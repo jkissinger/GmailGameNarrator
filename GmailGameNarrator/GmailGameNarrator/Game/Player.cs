@@ -38,13 +38,15 @@ namespace GmailGameNarrator.Game
             IsAlive = true;
         }
 
-        public void Kill(Role killerRole)
+        public bool Kill(Role killerRole)
         {
             if (!IsProtected)
             {
                 Role.KilledBy(killerRole);
                 IsAlive = false;
+                return true;
             }
+            return false;
         }
 
         public void Quit()

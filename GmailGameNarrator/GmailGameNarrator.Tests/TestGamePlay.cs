@@ -19,7 +19,7 @@ namespace GmailGameNarrator.Tests
         {
             for (int tests = 0; tests < 1; tests++)
             {
-                for (int i = 3; i < 7; i = i + 3)
+                for (int i = 3; i < 10; i = i + 3)
                 {
                     List<Player> players = TestX.GenListOfPlayers(i);
                     Game.Game game = new Game.Game(gameSystem.GetNextGameId(), players[0]);
@@ -39,14 +39,14 @@ namespace GmailGameNarrator.Tests
 
         private void DoDayVotes(Game.Game game)
         {
-            Player candidate = (Player)LivingPlayers(game).PickOne();
-            foreach (Player p in game.Players)
+            Player candidate = (Player)game.GetLivingPlayers().PickOne();
+            foreach (Player p in game.GetLivingPlayers())
             {
                 Game.Action action = new Game.Action(GameSystem.ActionEnum.Vote, candidate.Name.ToLowerInvariant());
                 gameSystem.DoAction(game, p, action);
-                while (p.Vote == null)
+                while (p.Vote == null && game.IsInProgress())
                 {
-                    Player newCandidate = (Player)game.Players.PickOne();
+                    Player newCandidate = (Player)game.GetLivingPlayers().PickOne();
                     action = new Game.Action(GameSystem.ActionEnum.Vote, newCandidate.Name.ToLowerInvariant());
                     gameSystem.DoAction(game, p, action);
                 }
@@ -55,9 +55,8 @@ namespace GmailGameNarrator.Tests
 
         private void DoNightActions(Game.Game game)
         {
-            foreach (Player p in game.Players)
+            foreach (Player p in game.GetLivingPlayers())
             {
-                if (!p.IsAlive) continue;
                 while (p.Actions.Count == 0)
                 {
                     Game.Action action = GenerateAction(game, p);
@@ -68,7 +67,7 @@ namespace GmailGameNarrator.Tests
 
         private Game.Action GenerateAction(Game.Game game, Player p)
         {
-            Player candidate = (Player)LivingPlayers(game).PickOne();
+            Player candidate = (Player)game.GetLivingPlayers().PickOne();
             if (p.Team.Equals("Illuminati")) candidate = (Player)LivingSheeple(game).PickOne();
             string param = p.Role.ActionText;
             if (param.Length > 0)
@@ -79,20 +78,10 @@ namespace GmailGameNarrator.Tests
             return action;
         }
 
-        private List<Player> LivingPlayers(Game.Game game)
-        {
-            List<Player> living = new List<Player>();
-            foreach(Player p in game.Players)
-            {
-                if (p.IsAlive) living.Add(p);
-            }
-            return living;
-        }
-
         private List<Player> LivingSheeple(Game.Game game)
         {
             List<Player> sheeple = new List<Player>();
-            foreach (Player p in LivingPlayers(game))
+            foreach (Player p in game.GetLivingPlayers())
             {
                 if (!p.Team.Equals("Illuminati")) sheeple.Add(p);
             }

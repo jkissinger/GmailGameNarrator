@@ -157,11 +157,6 @@ namespace GmailGameNarrator
             string rawMessage = Convert.ToBase64String(Encoding.UTF8.GetBytes(mm.ToString()));
             rawMessage = rawMessage.Replace('/', '_').Replace('+', '-');
             gMsg.Raw = rawMessage;
-            if (to.ToLower().Contains(Program.UnitTestAddress))
-            {
-                log.Info("Skipping actual send of unit testing email.");
-                return gMsg;
-            }
             return SendMessage(gMsg);
         }
 
@@ -206,6 +201,7 @@ namespace GmailGameNarrator
             //FEATURE Figure out how to make email clients treat each line as new
             //The problem is gmail's "Quoted text"
             //Tried: adding timestamp to end of message, tried adding random string to name of each br element
+            if (to.Contains(Program.UnitTestAddress)) return;
             SimpleMessage outgoing = new SimpleMessage();
             outgoing.To = to;
             outgoing.Subject = subject;

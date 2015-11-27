@@ -70,6 +70,7 @@ namespace GmailGameNarrator.Game.Roles
             Player nominee = game.GetPlayerByName(nomineeName);
             nominee.IsProtected = true;
             Gmail.EnqueueMessage(player.Address, game.Subject, "You are protecting " + nominee.Name.b());
+            game.Summary.AddEvent((player.Name.b() + " is protecting " + nominee.Name.b() + ".").tag("li"));
             return "";
         }
 
