@@ -69,8 +69,8 @@ namespace GmailGameNarrator.Game.Roles
             string nomineeName = player.Actions[0].Parameter.GetTextAfter("protect ");
             Player nominee = game.GetPlayerByName(nomineeName);
             nominee.IsProtected = true;
-            Gmail.EnqueueMessage(player.Address, game.Subject, "You are protecting " + nominee.Name.b());
-            game.Summary.AddEvent((player.Name.b() + " is protecting " + nominee.Name.b() + ".").tag("li"));
+            Gmail.MessagePlayer(player, game, "You are protecting " + nominee.Name.b());
+            game.Summary.AddEventLi(game.CycleTitle + " - " + player.Name.b() + " is protecting " + nominee.Name.b() + ".");
             return "";
         }
 
@@ -90,7 +90,7 @@ namespace GmailGameNarrator.Game.Roles
             else if (!nominee.IsAlive) return "Choice rejected: " + nomineeName.b() + " is already dead!";
             else
             {
-                Gmail.EnqueueMessage(player.Address, game.Subject, "Registered your night action to protect " + nomineeName.b() + ".");
+                Gmail.MessagePlayer(player, game, "Registered your night action to protect " + nomineeName.b() + ".");
             }
             return "";
         }

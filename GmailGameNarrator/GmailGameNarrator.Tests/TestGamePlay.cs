@@ -13,13 +13,29 @@ namespace GmailGameNarrator.Tests
     public class TestGamePlay
     {
         private GameSystem gameSystem = GameSystem.Instance;
+        /// <summary>
+        /// Number of tests to run
+        /// </summary>
+        private int numTests = 1;
+        /// <summary>
+        /// Minimum player count to test
+        /// </summary>
+        private int minPlayers = 3;
+        /// <summary>
+        /// Maximum player count to test
+        /// </summary>
+        private int maxPlayers = 10;
+        /// <summary>
+        /// Number to increase player count by.
+        /// </summary>
+        private int iterator = 1;
 
         [TestMethod]
         public void GamePlayTest()
         {
-            for (int tests = 0; tests < 1; tests++)
+            for (int tests = 0; tests < numTests; tests++)
             {
-                for (int i = 3; i < 10; i = i + 3)
+                for (int i = minPlayers; i < maxPlayers; i = i + iterator)
                 {
                     List<Player> players = TestX.GenListOfPlayers(i);
                     Game.Game game = new Game.Game(gameSystem.GetNextGameId(), players[0]);

@@ -133,7 +133,7 @@ namespace GmailGameNarrator.Game
         {
             log.Warn("Malformed request: " + message.Subject + " from " + message.From);
             log.Debug("Body: " + message.Body);
-            Gmail.EnqueueMessage(message.From, message.Subject, error);
+            Gmail.MessagePerson(message.From, message.Subject, error);
         }
     }
 }

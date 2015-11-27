@@ -11,6 +11,7 @@ namespace GmailGameNarrator.Game
         /// </summary>
         private List<string> events = new List<string>();
         private List<string> detailEvents = new List<string>();
+        private List<string> emails = new List<string>();
 
         public Summary(Game game)
         {
@@ -19,7 +20,18 @@ namespace GmailGameNarrator.Game
             AddEvent(line);
         }
 
-        public void AddEvent(string line) {
+        public void AddEmail(string to, string subject, string body)
+        {
+            emails.Add(subject + " sent to " + to + ":<br />" + body);
+        }
+
+        public void AddEventLi(string line)
+        {
+            AddEvent(line.li());
+        }
+
+        public void AddEvent(string line)
+        {
             detailEvents.Add(line);
             events.Add(line);
         }
@@ -37,10 +49,10 @@ namespace GmailGameNarrator.Game
         public void NewCycle(Game game)
         {
             string line = game.FullTitle + " has begun.";
-            AddEvent(line.tag("li"));
+            AddEvent(line.li());
             line = "<ul>";
             AddEvent(line);
-            line = "Players:".tag("li");
+            line = "Players:".li();
             AddDetailEvent(line);
             line = game.ListPlayersForSummary();
             AddDetailEvent(line);
@@ -54,7 +66,7 @@ namespace GmailGameNarrator.Game
 
         public void GameOver(Game game)
         {
-            string line = "Final game status:".tag("li");
+            string line = "Final game status:".li();
             AddDetailEvent(line);
             line = game.ListPlayersForSummary();
             AddDetailEvent(line);

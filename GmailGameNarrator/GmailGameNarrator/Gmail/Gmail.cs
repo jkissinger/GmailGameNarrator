@@ -196,7 +196,33 @@ namespace GmailGameNarrator
             return null;
         }
 
-        public static void EnqueueMessage(string to, string subject, string body)
+        public static void MessageAllPlayers(Game.Game game, string body)
+        {
+            game.Summary.AddEmail("Everyone", game.Subject, body);
+            foreach (Player p in game.Players)
+            {
+                EnqueueMessage(p.Address, game.Subject, body);
+            }
+        }
+
+        public static void MessagePlayer(Player player, Game.Game game, string body)
+        {
+            string subject = "Unknown Game";
+            if (game != null)
+            {
+                subject = game.Subject;
+            }
+            string to = player.Address;
+            game.Summary.AddEmail(to, subject, body);
+            EnqueueMessage(to, subject, body);
+        }
+
+        public static void MessagePerson(string to, string subject, string body)
+        {
+            EnqueueMessage(to, subject, body);
+        }
+
+        private static void EnqueueMessage(string to, string subject, string body)
         {
             //FEATURE Figure out how to make email clients treat each line as new
             //The problem is gmail's "Quoted text"

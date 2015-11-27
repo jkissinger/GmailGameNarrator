@@ -55,7 +55,7 @@ namespace GmailGameNarrator.Game.Roles
         /// <returns></returns>
         public override bool HaveIWon(Player player, Game game)
         {
-            if (Winner) game.MessageAllPlayers(player.Name.b() +" won because you voted for them and they were a " + Name.b());
+            if (Winner) Gmail.MessageAllPlayers(game, player.Name.b() +" won because you voted for them and they were a " + Name.b());
             return Winner;
         }
 

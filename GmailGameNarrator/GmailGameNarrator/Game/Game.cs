@@ -10,7 +10,17 @@ namespace GmailGameNarrator.Game
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger("System." + System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public int Id { get; }
-        public string Subject { get { return "Re: " + Title; } }
+        public string Subject
+        {
+            get
+            {
+                if(IsInProgress())
+                {
+                    return FullTitle;
+                }
+                return Title;
+            }
+        }
         public string Title { get { return "Game " + Id; } }
         public Player Overlord { get; }
         private bool isInProgress { get; set; }
@@ -95,7 +105,7 @@ namespace GmailGameNarrator.Game
         public List<Player> GetLivingPlayers()
         {
             List<Player> players = new List<Player>();
-            foreach(Player p in Players)
+            foreach (Player p in Players)
             {
                 if (p.IsAlive) players.Add(p);
             }
@@ -203,7 +213,7 @@ namespace GmailGameNarrator.Game
                 body += FlavorText.Divider + CycleTitle + " has begun, use the commands below to take an action.";
                 body += FlavorText.Divider + this.Status();
                 body += FlavorText.Divider + this.Help(p);
-                Gmail.EnqueueMessage(p.Address, Subject, body);
+                Gmail.MessagePlayer(p, this, body);
             }
 
             Summary.NewCycle(this);
@@ -235,7 +245,7 @@ namespace GmailGameNarrator.Game
         public void AssignRoles(List<Type> roleTypes)
         {
             //Randomize the list of players
-            foreach(Player p in MathX.RandomizedList(Players))
+            foreach (Player p in MathX.RandomizedList(Players))
             {
                 if (GetMajorTeamsPlayingCount() < 2)
                 {
@@ -348,7 +358,7 @@ namespace GmailGameNarrator.Game
         /// <returns>True if either property is exceeded, false otherwise.</returns>
         public bool MaxPlayersForRoleReached(Role role)
         {
-            int playerCount = GetCountOfPlayersWithRole(role)+1;
+            int playerCount = GetCountOfPlayersWithRole(role) + 1;
             int maxPercent = MathX.Percent(Players.Count, role.MaxPercentage);
             //1 player is okay for any role
             if (playerCount == 1) return false;
@@ -370,14 +380,6 @@ namespace GmailGameNarrator.Game
             }
             message = teammates.HtmlBulletList();
             return message;
-        }
-
-        public void MessageAllPlayers(string body)
-        {
-            foreach (Player p in Players)
-            {
-                Gmail.EnqueueMessage(p.Address, Subject, body);
-            }
         }
 
         public void CheckEndOfCycle()
@@ -428,23 +430,22 @@ namespace GmailGameNarrator.Game
             {
                 //Mark electee as dead then check if the game is over
                 electee.Kill(null);
-                voteMessage = String.Format(FlavorText.PlayerOutcastMessage, electee.Name.b());                
+                voteMessage = String.Format(FlavorText.PlayerOutcastMessage, electee.Name.b());
             }
-            Summary.AddEvent("Voting Results:");
-            Summary.AddEvent(voteMessage);
+            Summary.AddEventLi("Voting Results: " + voteMessage);
             Summary.AddDetailEvent(votingResults.HtmlBulletList());
             ShowVotes(votingResults, voteMessage);
-            //I don't think there's any reason not to show voting results before checking game end?
-            //if (CheckGameEnd("Results of the last vote:<br />" + votingResults.HtmlBulletList())) return;
+
             if (IsGameOver()) return;
+            NextCycle();
             foreach (Player p in Players)
             {
                 string message = p.Role.Instructions;
                 string teammates = ListTeammates(p);
                 if (p.Team.KnowsTeammates && !String.IsNullOrEmpty(teammates)) message += FlavorText.Divider + teammates;
-                if (p.IsAlive) Gmail.EnqueueMessage(p.Address, Subject, message);
+                if (p.IsAlive) Gmail.MessagePlayer(p, this, message);
             }
-           
+
 
         }
 
@@ -452,10 +453,8 @@ namespace GmailGameNarrator.Game
         {
             string message = CycleTitle + " has come to an end. Votes have been tallied: ";
             message += votingResults.HtmlBulletList();
-            NextCycle();
             message += resultMessage;
-            message += " " + CycleTitle + " will now begin.";
-            MessageAllPlayers(message);
+            Gmail.MessageAllPlayers(this, message);
         }
 
         private void EndOfNight()
@@ -477,11 +476,12 @@ namespace GmailGameNarrator.Game
             string message = "The night has come to a close, ";
             if (nightSummary.Count > 0) message += "this is what happened:<br />" + nightSummary.HtmlBulletList();
             else message = "it was completely uneventful.";
-            MessageAllPlayers(message);
+            Gmail.MessageAllPlayers(this, message);
 
-            if(!IsGameOver()) {
+            if (!IsGameOver())
+            {
                 NextCycle();
-            }            
+            }
         }
 
         public List<Player> GetLivingPlayersOnMyTeam(Player player)
@@ -530,13 +530,13 @@ namespace GmailGameNarrator.Game
                 othersList.Add(msg);
             }
             isInProgress = false;
-            string message = "The game is over.  Winners:".tag("li");
+            string message = "The game is over.  Winners:".li();
             message += winnersList.HtmlBulletList();
-            message += "Everyone else:".tag("li");
+            message += "Everyone else:".li();
             message += othersList.HtmlBulletList();
             Summary.EndCycle();
             Summary.AddEvent(message);
-            MessageAllPlayers(message.tag("ul"));
+            Gmail.MessageAllPlayers(this, message.tag("ul"));
             Summary.GameOver(this);
             GameSystem.Instance.RemoveGame(this);
         }

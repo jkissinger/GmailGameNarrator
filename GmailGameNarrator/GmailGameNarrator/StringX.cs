@@ -61,6 +61,11 @@ namespace GmailGameNarrator
             return str.tag("i");
         }
 
+        public static string li(this string str)
+        {
+            return str.tag("li");
+        }
+
         public static string tag(this string str, string tag)
         {
             return "<" + tag + ">" + str + "</" + tag + ">";

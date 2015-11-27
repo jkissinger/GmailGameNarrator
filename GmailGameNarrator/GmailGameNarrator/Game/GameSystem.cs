@@ -108,7 +108,7 @@ namespace GmailGameNarrator.Game
             {
                 //If JoinAs gets hit here, it's only because the player is already playing in a different game
                 Game g = GetGameByPlayer(player);
-                HandleBadAction(g.Subject, player, action, "Failed to join " + game.Title + ". You are already playing in " + g.Title + ".");
+                HandleBadAction(g, player, action, "Failed to join " + game.Title + ". You are already playing in " + g.Title + ".");
             }
             else if (action.Name == ActionEnum.Status) Status(player, action, game);
             else if (action.Name == ActionEnum.Cancel) Cancel(player, action, game);
@@ -126,7 +126,7 @@ namespace GmailGameNarrator.Game
             string result = player.AddNightAction(action, game);
             if (!String.IsNullOrEmpty(result))
             {
-                HandleBadAction(game.Subject, player, action, result);
+                HandleBadAction(game, player, action, result);
                 return;
             }
             List<string> actions = new List<string>();
@@ -134,7 +134,7 @@ namespace GmailGameNarrator.Game
             {
                 actions.Add(player.Role.Name.b() + a.Parameter);
             }
-            Gmail.EnqueueMessage(player.Address, game.Subject, "Your registered actions:<br />" + actions.HtmlBulletList());
+            Gmail.MessagePlayer(player, game, "Your registered actions:<br />" + actions.HtmlBulletList());
             game.CheckEndOfCycle();
         }
 
@@ -142,7 +142,7 @@ namespace GmailGameNarrator.Game
         {
             if(game.ActiveCycle == Game.Cycle.Night)
             {
-                HandleBadAction(game.Subject, player, action, "You can only vote during the day, your vote for <b>" + action.Parameter + "</b> was discarded.");
+                HandleBadAction(game, player, action, "You can only vote during the day, your vote for <b>" + action.Parameter + "</b> was discarded.");
             }
             Player nominee = game.GetPlayerByName(action.Parameter);
             if(nominee == null)
@@ -154,23 +154,23 @@ namespace GmailGameNarrator.Game
                 }
                 else
                 {
-                    HandleBadAction(game.Subject, player, action, "You voted for an invalid player <b>" + action.Parameter + "</b> see the player's names below." + FlavorText.Divider + game.Status());
+                    HandleBadAction(game, player, action, "You voted for an invalid player <b>" + action.Parameter + "</b> see the player's names below." + FlavorText.Divider + game.Status());
                     return;
                 }
             }
             if (nominee.Equals(player))
             {
-                HandleBadAction(game.Subject, player, action, "You cannot vote for yourself.");
+                HandleBadAction(game, player, action, "You cannot vote for yourself.");
             }
             else if (!nominee.IsAlive)
             {
-                HandleBadAction(game.Subject, player, action, nominee.Name.b() + " is already dead. See who's alive below:" + FlavorText.Divider + game.Status());
+                HandleBadAction(game, player, action, nominee.Name.b() + " is already dead. See who's alive below:" + FlavorText.Divider + game.Status());
             }
             else
             {
                 Vote vote = new Vote(action, nominee);
                 player.Vote = vote;
-                Gmail.EnqueueMessage(player.Address, game.Subject, "Registered your vote for <b>" + nominee.Name + "</b>.");
+                Gmail.MessagePlayer(player, game, "Registered your vote for <b>" + nominee.Name + "</b>.");
                 game.CheckEndOfCycle();
             }
         }
@@ -178,13 +178,13 @@ namespace GmailGameNarrator.Game
         public void Help(Player player, Action action, Game game)
         {
             gameLog.Info("Sending Help message for " + game + " to " + player.Address);
-            Gmail.EnqueueMessage(player.Address, game.Subject, game.Help(player));
+            Gmail.MessagePlayer(player, game, game.Help(player));
         }
 
         public void Status(Player player, Action action, Game game)
         {
             gameLog.Info("Sending Status of " + game + " to " + player.Address);
-            Gmail.EnqueueMessage(player.Address, game.Subject, game.Status());
+            Gmail.MessagePlayer(player, game, game.Status());
         }
 
         public void Cancel(Player player, Action action, Game game)
@@ -193,7 +193,7 @@ namespace GmailGameNarrator.Game
             {
                 gameLog.Info("Cancelling " + game);
                 RemoveGame(game);
-                Gmail.EnqueueMessage(player.Address, game.Subject, game.Title + " has been cancelled.");
+                Gmail.MessagePlayer(player, game, game.Title + " has been cancelled.");
             }
         }
 
@@ -209,7 +209,7 @@ namespace GmailGameNarrator.Game
                 gameLog.Info("Attempting to start " + game);
                 if(!game.Start())
                 {
-                    HandleBadAction(game.Subject, player, action, "You need at least 3 players to start a game." + FlavorText.Divider + game.Status());
+                    HandleBadAction(game, player, action, "You need at least 3 players to start a game." + FlavorText.Divider + game.Status());
                 }
             }
         }
@@ -219,13 +219,13 @@ namespace GmailGameNarrator.Game
             if (game.IsInProgress())
             {
                 player.Quit();
-                Gmail.EnqueueMessage(player.Address, game.Subject, "Your character in " + game.Title + ", " + player.Name + " is now dead.");
+                Gmail.MessagePlayer(player, game, "Your character in " + game.Title + ", " + player.Name + " is now dead.");
                 gameLog.Info(player + " is dead because they quit " + game);
             }
             else
             {
                 game.RemovePlayer(player);
-                Gmail.EnqueueMessage(player.Address, game.Subject, "You have been removed from " + game);
+                Gmail.MessagePlayer(player, game, "You have been removed from " + game);
                 gameLog.Info(player + " is quitting " + game);
             }
         }
@@ -241,11 +241,11 @@ namespace GmailGameNarrator.Game
                     {
                         if (game == null)
                         {
-                            HandleBadAction("New Game", player, action, "You didn't specify the name you wished to join the game as. To do this reply to this message with \"Join as <i>name</i>\" where <i>name</i> is your name.");
+                            HandleBadAction(null, player, action, "You didn't specify the name you wished to join the game as. To do this reply to this message with \"Join as <i>name</i>\" where <i>name</i> is your name.");
                         }
                         else
                         {
-                            HandleBadAction(game.Subject, player, action, "You didn't specify the name you wished to join the game as. To do this reply to this message with \"Join as <i>name</i>\" where <i>name</i> is your name.");
+                            HandleBadAction(game, player, action, "You didn't specify the name you wished to join the game as. To do this reply to this message with \"Join as <i>name</i>\" where <i>name</i> is your name.");
                         }
                         return;
                     }
@@ -255,7 +255,7 @@ namespace GmailGameNarrator.Game
             }
             Player p = new Player("", address);
             Action a = new Action(ActionEnum.JoinAs, "");
-            HandleBadAction("New Game", p, a, "You aren't playing any games, the only action you may take is joining a game or creating a game. To start a new game reply to this message with \"Join as <i>name</i>\" where <i>name</i> is your name.");
+            HandleBadAction(null, p, a, "You aren't playing any games, the only action you may take is joining a game or creating a game. To start a new game reply to this message with \"Join as <i>name</i>\" where <i>name</i> is your name.");
         }
 
         private void JoinGame(Player player, Action action, Game game)
@@ -265,16 +265,16 @@ namespace GmailGameNarrator.Game
             {
                 if(game.IsInProgress())
                 {
-                    HandleBadAction(game.Subject, player, action, "You cannot join " + game + " because it is in progress.");
+                    HandleBadAction(game, player, action, "You cannot join " + game + " because it is in progress.");
                 }
                 else
                 {
                     game.AddPlayer(player);
-                    Gmail.EnqueueMessage(player.Address, game.Subject, "Successfully added you to the game, <b>" + game.Overlord + "</b> is the Overlord.<br />"
+                    Gmail.MessagePlayer(player, game, "Successfully added you to the game, <b>" + game.Overlord + "</b> is the Overlord.<br />"
                         + "I will notify you when the game has started."
                         + "<br /><br />"
                         + game.Help(player));
-                    Gmail.EnqueueMessage(game.Overlord.Address, game.Subject, "<b>" + player + "</b> has joined " + game.Title);
+                    Gmail.MessagePlayer(game.Overlord, game, "<b>" + player + "</b> has joined " + game.Title);
                     gameLog.Info("Added player " + player + " to " + game);
                 }
             }
@@ -285,12 +285,12 @@ namespace GmailGameNarrator.Game
             Game game = GetGameByPlayer(overlord);
             if (game != null)
             {
-                HandleBadAction("New Game", overlord, action, "You are already playing in " + game + " , you may only play one game at a time.");
+                HandleBadAction(null, overlord, action, "You are already playing in " + game + " , you may only play one game at a time.");
                 return;
             }
             game = new Game(GetNextGameId(), overlord);
             Games.Add(game);
-            Gmail.EnqueueMessage(overlord.Address, game.Title, game.Title + " has been started, you are the <b>Overlord</b>."
+            Gmail.MessagePlayer(overlord, game, game.Title + " has been started, you are the <b>Overlord</b>."
                 + "<br /><br />Have your friends join by sending a message with the subject \"" + game.Title + "\" and body \"Join as <i>name</i>\" where <i>name</i> is their name.<br />"
                 + game.Help(overlord)
                 + "<br /><hr><br />" + Program.License.Replace('\n'.ToString(), "<br />")
@@ -306,16 +306,16 @@ namespace GmailGameNarrator.Game
             return id;
         }
 
-        private void HandleBadAction(string subject, Player player, Action action, string error, Exception e)
+        private void HandleBadAction(Game game, Player player, Action action, string error, Exception e)
         {
             log.Warn("Exception thrown when parsing action: " + e.Message);
-            HandleBadAction(subject, player, action, error);
+            HandleBadAction(game, player, action, error);
         }
 
-        private void HandleBadAction(string subject, Player player, Action action, string error)
+        private void HandleBadAction(Game game, Player player, Action action, string error)
         {
             log.Warn("Malformed action " + action.Name + " with param " + action.Parameter + " from " + player.Address);
-            Gmail.EnqueueMessage(player.Address, subject, error);
+            Gmail.MessagePlayer(player, game, error);
         }
     }
 }

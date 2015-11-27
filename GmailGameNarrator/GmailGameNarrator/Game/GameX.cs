@@ -64,7 +64,7 @@ namespace GmailGameNarrator.Game
                 {
                     livingState = " - <b>Alive</b>";
                 }
-                players += (player + " as " + player.Role + " for " + player.Team + livingState).tag("li");
+                players += (player + " as " + player.Role + " for " + player.Team + livingState).li();
             }
             players = players + "</ul>";
             return players;

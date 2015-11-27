@@ -61,8 +61,8 @@
         {
             string nomineeName = player.Actions[0].Parameter.GetTextAfter(ActionText + " ");
             Player nominee = game.GetPlayerByName(nomineeName);
-            Gmail.EnqueueMessage(player.Address, game.Subject, "You have investigated " + nominee.Name.b() + " and determined their allegiance is with the " + nominee.Team.b());
-            game.Summary.AddEvent((player.Name.b() + " investigated " + nominee.Name.b() + ". And found out their allegiance is with the " + nominee.Team.b()).tag("li"));
+            Gmail.MessagePlayer(player, game, "You have investigated " + nominee.Name.b() + " and determined their allegiance is with the " + nominee.Team.b());
+            game.Summary.AddEventLi(game.CycleTitle + " - " + player.Name.b() + " investigated " + nominee.Name.b() + ". And found out their allegiance is with the " + nominee.Team.b());
             return "";
         }
 
@@ -82,7 +82,7 @@
             else if (!nominee.IsAlive) return "Choice rejected: " + nomineeName.b() + " is already dead!";
             else
             {
-                Gmail.EnqueueMessage(player.Address, game.Subject, "Registered your night action to " + ActionText  + " " + nomineeName.b() + ".");
+                Gmail.MessagePlayer(player, game, "Registered your night action to " + ActionText  + " " + nomineeName.b() + ".");
             }
             return "";
         }
