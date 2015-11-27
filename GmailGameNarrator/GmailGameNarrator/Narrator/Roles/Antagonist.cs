@@ -70,6 +70,14 @@ namespace GmailGameNarrator.Narrator.Roles
             }
         }
 
+        public override string Description
+        {
+            get
+            {
+                return "You've had enough of the Sheeple eating your food and using your shelter.  With the other members of your team, you vote and then cast out one of the Sheeple the enclave, knowing they will die quickly outside.";
+            }
+        }
+
         public override string DoNightActions(Player player, Game game)
         {
             Player nominee = null;

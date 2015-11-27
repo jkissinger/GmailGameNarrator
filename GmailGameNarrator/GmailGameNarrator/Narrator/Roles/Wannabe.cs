@@ -9,7 +9,7 @@ namespace GmailGameNarrator.Narrator.Roles
         {
             get
             {
-                return "You are a " + Name.b() + ". You want to be cast out.  If you convince the rest of the players to cast you out, you win.";
+                return "You are a " + Name.b() + ". At night, send a message with " + Name.b() + " as the body.";
             }
         }
 
@@ -33,7 +33,15 @@ namespace GmailGameNarrator.Narrator.Roles
         {
             get
             {
-                return 3;
+                return 10;
+            }
+        }
+
+        public override string Description
+        {
+            get
+            {
+                return "The Illuminati said you could be one of them if you got the rest of the town to vote to cast you out.  If that happens, you win.";
             }
         }
 

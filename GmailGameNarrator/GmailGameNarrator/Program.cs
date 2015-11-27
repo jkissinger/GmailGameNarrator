@@ -49,6 +49,9 @@ namespace GmailGameNarrator
             GameSystem ns = GameSystem.Instance;
             MessageParser mp = MessageParser.Instance;
 
+            //Mark all messages sent before startup as read so that we don't try to process too many at once
+            Gmail.MarkAllMessagesRead();
+
             CheckMessagesTask CheckTask = new CheckMessagesTask();
             TaskState CheckMessagesState = CheckTask.Init();
 

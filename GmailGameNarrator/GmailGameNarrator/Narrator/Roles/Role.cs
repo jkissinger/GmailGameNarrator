@@ -10,6 +10,7 @@ namespace GmailGameNarrator.Narrator.Roles
     {
         public abstract string Name { get; }
         public abstract Team Team { get; }
+        public abstract string Description { get; }
         /// <summary>
         /// The priority for night actions, between 0 and 4, first processed is 0, last 4.
         /// </summary>
@@ -18,6 +19,13 @@ namespace GmailGameNarrator.Narrator.Roles
             get
             {
                 return 4;
+            }
+        }
+        public virtual string ActionText
+        {
+            get
+            {
+                return Name;
             }
         }
         /// <summary>
@@ -51,12 +59,6 @@ namespace GmailGameNarrator.Narrator.Roles
         public abstract string Instructions { get; }
 
         public virtual void KilledBy(Role role) { }
-        public virtual string ActionText
-        {
-            get{
-                return "";
-            }
-        }
         public virtual string ValidateAction(Player player, Action action, Game game)
         {
             return "";

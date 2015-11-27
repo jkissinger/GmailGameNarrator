@@ -20,11 +20,11 @@ namespace GmailGameNarrator.Tests
         /// <summary>
         /// Minimum player count to test
         /// </summary>
-        private int minPlayers = 3;
+        private int minPlayers = 100;
         /// <summary>
         /// Maximum player count to test
         /// </summary>
-        private int maxPlayers = 10;
+        private int maxPlayers = 100;
         /// <summary>
         /// Number to increase player count by.
         /// </summary>
@@ -35,7 +35,7 @@ namespace GmailGameNarrator.Tests
         {
             for (int tests = 0; tests < numTests; tests++)
             {
-                for (int i = minPlayers; i < maxPlayers; i = i + iterator)
+                for (int i = minPlayers; i < maxPlayers+1; i = i + iterator)
                 {
                     List<Player> players = TestX.GenListOfPlayers(i);
                     Game game = new Game(gameSystem.GetNextGameId(), players[0]);
@@ -60,7 +60,7 @@ namespace GmailGameNarrator.Tests
             {
                 Narrator.Action action = new Narrator.Action(GameSystem.ActionEnum.Vote, candidate.Name.ToLowerInvariant());
                 gameSystem.DoAction(game, p, action);
-                while (p.Vote == null && game.IsInProgress())
+                while (p.Vote == null && game.IsInProgress() && game.ActiveCycle == Game.Cycle.Day)
                 {
                     Player newCandidate = (Player)game.GetLivingPlayers().PickOne();
                     action = new Narrator.Action(GameSystem.ActionEnum.Vote, newCandidate.Name.ToLowerInvariant());

@@ -196,6 +196,19 @@ namespace GmailGameNarrator
             return null;
         }
 
+
+        public static void MarkAllMessagesRead()
+        {
+            IList<SimpleMessage> messages = GetUnreadMessages();
+            if (messages != null && messages.Count > 0)
+            {
+                foreach (SimpleMessage msg in messages)
+                {
+                    MarkMessageRead(msg.Message.Id);
+                }
+            }
+        }
+
         public static void MessageAllPlayers(Game game, string body)
         {
             game.Summary.AddEmail("Everyone", game.Subject, body);

@@ -48,7 +48,8 @@ namespace GmailGameNarrator.Narrator
             int id;
             try
             {
-                string strId = StringX.GetTextAfter(subject, "game ");
+                string strId = subject.GetTextAfter("game ");
+                if (strId.Contains(" ")) strId = strId.GetTextBefore(" ");
                 id = Int32.Parse(strId);
             }
             catch (Exception e)
@@ -99,7 +100,7 @@ namespace GmailGameNarrator.Narrator
             {
                 foreach (var e in Enum.GetValues(typeof(GameSystem.ActionEnum)))
                 {
-                    string eWithSpaces = StringX.AddSpaces(e.ToString());
+                    string eWithSpaces = e.ToString().AddSpaces();
                     if (line.StartsWith(eWithSpaces.ToLowerInvariant()))
                     {
                         GameSystem.ActionEnum actionEnum = (GameSystem.ActionEnum)Enum.Parse(typeof(GameSystem.ActionEnum), e.ToString());
@@ -110,10 +111,10 @@ namespace GmailGameNarrator.Narrator
                 }
                 if (game != null && game.IsInProgress())
                 {
-                    string role = player.Role.Name.ToLowerInvariant();
-                    if (line.StartsWith(role))
+                    string actionText = player.Role.ActionText.ToLowerInvariant();
+                    if (line.StartsWith(actionText))
                     {
-                        string parameter = line.GetTextAfter(role).Trim();
+                        string parameter = line.GetTextAfter(actionText).Trim();
                         Action action = new Action(GameSystem.ActionEnum.Role, parameter);
                         actions.Add(action);
                     }

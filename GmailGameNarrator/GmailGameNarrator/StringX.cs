@@ -10,18 +10,16 @@ namespace GmailGameNarrator
 {
     public static class StringX
     {
-
-        //FEATURE Switch all of these to string extensions
         public static string GetTextAfter(this string str, string delimiter)
         {
             delimiter = delimiter.ToLowerInvariant();
             string result = "";
             int idx = str.IndexOf(delimiter);
             if (idx >= 0) result = str.Substring(idx + delimiter.Length, str.Length - delimiter.Length - idx);
-            return result;
+            return result.Trim();
         }
 
-        public static string GetTextBefore(string str, string delimiter)
+        public static string GetTextBefore(this string str, string delimiter)
         {
             delimiter = delimiter.ToLowerInvariant();
             string result = "";
@@ -30,12 +28,12 @@ namespace GmailGameNarrator
             return result;
         }
 
-        public static string ToTitleCase(string str)
+        public static string ToTitleCase(this string str)
         {
             return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(str).Trim();
         }
 
-        public static string AddSpaces(string str)
+        public static string AddSpaces(this string str)
         {
             string result = "";
             foreach(char c in str)

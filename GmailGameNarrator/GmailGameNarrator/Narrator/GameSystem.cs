@@ -56,7 +56,7 @@ namespace GmailGameNarrator.Narrator
             List<Type> RoleTypes = new List<Type>();
             foreach (Type t in Assembly.GetExecutingAssembly().GetTypes())
             {
-                if (t.Namespace == "GmailGameGame.Roles")
+                if (t.Namespace == "GmailGameNarrator.Narrator.Roles")
                 {
                     if (!t.IsAbstract)
                     {
@@ -114,9 +114,10 @@ namespace GmailGameNarrator.Narrator
             else if (action.Name == ActionEnum.Cancel) Cancel(player, action, game);
             else if (action.Name == ActionEnum.Start) Start(player, action, game);
             else if (action.Name == ActionEnum.Quit) Quit(player, action, game);
-            else if (action.Name == ActionEnum.Vote) Vote(player, action, game);
+            else if (action.Name == ActionEnum.Vote && game.ActiveCycle == Game.Cycle.Day) Vote(player, action, game);
             else if (action.Name == ActionEnum.Help) Help(player, action, game);
             else if (action.Name == ActionEnum.Role) RoleAction(player, action, game);
+            //TODO Implement Kick & Ban
             //if (action.Name == ActionEnum.Kick) Kick(player, action, game);
             //if (action.Name == ActionEnum.Ban) Ban(player, action, game);
         }
@@ -140,10 +141,6 @@ namespace GmailGameNarrator.Narrator
 
         private void Vote(Player player, Action action, Game game)
         {
-            if(game.ActiveCycle == Game.Cycle.Night)
-            {
-                HandleBadAction(game, player, action, "You can only vote during the day, your vote for <b>" + action.Parameter + "</b> was discarded.");
-            }
             Player nominee = game.GetPlayerByName(action.Parameter);
             if(nominee == null)
             {
@@ -236,12 +233,12 @@ namespace GmailGameNarrator.Narrator
             {
                 if (action.Name == ActionEnum.JoinAs)
                 {
-                    Player player = new Player(StringX.ToTitleCase(action.Parameter), address);
+                    Player player = new Player(action.Parameter.ToTitleCase(), address);
                     if (String.IsNullOrEmpty(player.Name))
                     {
                         if (game == null)
                         {
-                            HandleBadAction(null, player, action, "You didn't specify the name you wished to join the game as. To do this reply to this message with \"Join as <i>name</i>\" where <i>name</i> is your name.");
+                            HandleBadAction(null, player, action, "You didn't specify the name you wished to join the game as. To do this send a new email with \"Join as <i>name</i>\" where <i>name</i> is your name.");
                         }
                         else
                         {
@@ -267,6 +264,10 @@ namespace GmailGameNarrator.Narrator
                 {
                     HandleBadAction(game, player, action, "You cannot join " + game + " because it is in progress.");
                 }
+                else if(game.GetPlayerByName(player.Name) != null)
+                {
+                    HandleBadAction(game, player, action, "Someone else is already using " + player.Name.b() + " as their name, please choose a different name.");
+                } 
                 else
                 {
                     game.AddPlayer(player);

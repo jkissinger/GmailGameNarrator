@@ -73,6 +73,7 @@ namespace GmailGameNarrator.Narrator
 
         public void AddPlayer(Player player)
         {
+            
             MyPlayers.Add(player);
         }
 
@@ -206,6 +207,7 @@ namespace GmailGameNarrator.Narrator
                 Role r = p.Role;
                 string body = FlavorText.GetStartGameMessage();
                 body += FlavorText.Divider + "You have been assigned the role of <b>" + r.Name + "</b> and are on the <b>" + r.Team.Name + "</b> team.<br />";
+                body += r.Description + "<br />";
                 string teammates = ListTeammates(p);
                 if (String.IsNullOrEmpty(teammates)) teammates = "You have no teammates.";
                 if (r.Team.KnowsTeammates) body += "Teammates:<br />" + teammates;
@@ -524,14 +526,14 @@ namespace GmailGameNarrator.Narrator
             List<string> winnersList = new List<string>();
             foreach (Player w in winners)
             {
-                string msg = StringX.b(w.Name) + " as " + StringX.b(w.Role.Name) + " for the " + StringX.b(w.Team.Name);
+                string msg = w.Name.b() + " as " + w.Role.Name.b() + " for the " + w.Team.Name.b();
                 winnersList.Add(msg);
             }
             List<string> othersList = new List<string>();
             List<Player> others = Players.Except(winners).ToList();
             foreach (Player o in others)
             {
-                string msg = StringX.b(o.Name) + " as " + StringX.b(o.Role.Name) + " for the " + StringX.b(o.Team.Name);
+                string msg = o.Name.b() + " as " + o.Role.Name.b() + " for the " + o.Team.Name.b();
                 othersList.Add(msg);
             }
             isInProgress = false;

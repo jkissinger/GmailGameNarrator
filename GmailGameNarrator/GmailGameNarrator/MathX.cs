@@ -9,11 +9,11 @@ namespace GmailGameNarrator
 {
     public static class MathX
     {
-        private static Random r = new Random();
         /// <summary>
-        /// Random is not documented as thread safe so there are thread locks on the methods using <see cref="r"/>
+        /// Random is not thread safe, but the only thread that should access this is CheckMessagesTask and that thread is locked.
         /// </summary>
-        static object lockRandom = new object();
+        private static Random r = new Random();
+
 
         public static object PickOne(this IEnumerable<object> objs)
         {

@@ -49,6 +49,14 @@
             }
         }
 
+        public override string Description
+        {
+            get
+            {
+                return "Before the world came to an end, you worked as a private investigator.  Using your deductive skills, you analyze one person each night and are usually able to determine their allegiance.";
+            }
+        }
+
         public override string Instructions
         {
             get

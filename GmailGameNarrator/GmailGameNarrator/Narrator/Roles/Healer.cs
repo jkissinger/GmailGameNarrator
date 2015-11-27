@@ -12,7 +12,7 @@ namespace GmailGameNarrator.Narrator.Roles
         {
             get
             {
-                return "Doctor";
+                return "BodyGuard";
             }
         }
 
@@ -36,7 +36,7 @@ namespace GmailGameNarrator.Narrator.Roles
         {
             get
             {
-                return 5;
+                return 8;
             }
         }
 
@@ -45,6 +45,14 @@ namespace GmailGameNarrator.Narrator.Roles
             get
             {
                 return 1;
+            }
+        }
+
+        public override string Description
+        {
+            get
+            {
+                return "You live in the enclave with the rest of the Citizens, but you are a bodyguard by night.  You stake out someone's house and spend all night protecting them.";
             }
         }
 
@@ -60,13 +68,13 @@ namespace GmailGameNarrator.Narrator.Roles
         {
             get
             {
-                return "At night, send a message with \"" + Name.b() + " protect player\" in the body.  You will do everything you can to prevent that player from dying that night.";
+                return "At night, send a message with \"" + ActionText.b() + " player\" in the body.  You will do everything you can to prevent that player from dying that night.";
             }
         }
 
         public override string DoNightActions(Player player, Game game)
         {
-            string nomineeName = player.Actions[0].Parameter.GetTextAfter("protect ");
+            string nomineeName = player.Actions[0].Parameter.GetTextAfter(ActionText);
             Player nominee = game.GetPlayerByName(nomineeName);
             nominee.IsProtected = true;
             Gmail.MessagePlayer(player, game, "You are protecting " + nominee.Name.b());
@@ -76,21 +84,21 @@ namespace GmailGameNarrator.Narrator.Roles
 
         private Player GetNominee(Player player, Game game)
         {
-            string nomineeName = player.Actions[0].Parameter.GetTextAfter("protect ");
+            string nomineeName = player.Actions[0].Parameter.GetTextAfter(ActionText);
             Player newNominee = game.GetPlayerByName(nomineeName);
             return newNominee;
         }
 
         public override string ValidateAction(Player player, Action action, Game game)
         {
-            string nomineeName = action.Parameter.GetTextAfter("protect ");
+            string nomineeName = action.Parameter.GetTextAfter(ActionText);
             Player nominee = game.GetPlayerByName(nomineeName);
             if (nominee == null) return nomineeName.b() + " is not a valid player in " + game.Title;
             else if (nominee.Equals(player)) return "You cannot protect yourself!";
             else if (!nominee.IsAlive) return "Choice rejected: " + nomineeName.b() + " is already dead!";
             else
             {
-                Gmail.MessagePlayer(player, game, "Registered your night action to protect " + nomineeName.b() + ".");
+                Gmail.MessagePlayer(player, game, "Registered your night action to " + ActionText + " " + nomineeName.b() + ".");
             }
             return "";
         }

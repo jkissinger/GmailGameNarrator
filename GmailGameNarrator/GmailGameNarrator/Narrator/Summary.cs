@@ -22,7 +22,7 @@ namespace GmailGameNarrator.Narrator
 
         public void AddEmail(string to, string subject, string body)
         {
-            emails.Add(subject + " sent to " + to + ":<br />" + body);
+            emails.Add("<h1>" + subject + " sent to " + to + ":</h1>" + body.tag("p"));
         }
 
         public void AddEventLi(string line)
@@ -77,6 +77,7 @@ namespace GmailGameNarrator.Narrator
         {
             File.WriteAllLines(fileName + ".html", events);
             File.WriteAllLines(fileName + " - Details.html", detailEvents);
+            File.WriteAllLines(fileName + " - Emails.html", emails);
         }
     }
 }

@@ -45,6 +45,14 @@ namespace GmailGameNarrator.Narrator.Roles
             }
         }
 
+        public override string Description
+        {
+            get
+            {
+                return "You are a Citizen of the Town, an enclave.  You know there are illuminati amongst you, trying to cast out the lesser folk such as yourself.  Find your allies and stop them.";
+            }
+        }
+
         public override int NightActionPriority
         {
             get
