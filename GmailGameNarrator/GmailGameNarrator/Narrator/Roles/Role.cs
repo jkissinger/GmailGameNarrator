@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GmailGameNarrator.Game.Roles
+namespace GmailGameNarrator.Narrator.Roles
 {
     public abstract class Role
     {

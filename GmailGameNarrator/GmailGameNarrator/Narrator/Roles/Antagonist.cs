@@ -1,8 +1,8 @@
-﻿using GmailGameNarrator.Game.Teams;
+﻿using GmailGameNarrator.Narrator.Teams;
 using System;
 using System.Collections.Generic;
 
-namespace GmailGameNarrator.Game.Roles
+namespace GmailGameNarrator.Narrator.Roles
 {
     public class Antagonist : Role
     {
@@ -81,7 +81,6 @@ namespace GmailGameNarrator.Game.Roles
                 else if (!nominee.Equals(newNominee))
                 {
                     List<string> nominations = GetNominations(teammates, game);
-                    //BUG This showed when there was a consensus
                     string message = game.CycleTitle + " - The " + Team.Name.b() + " didn't have a consensus! You cast out nobody!<br />" + "Team voting results:<br />" + nominations.HtmlBulletList();
                     game.Summary.AddUniqueEvent(message.li());
                     Gmail.MessagePlayer(player, game, message);

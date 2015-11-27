@@ -1,4 +1,4 @@
-﻿using GmailGameNarrator.Game;
+﻿using GmailGameNarrator.Narrator;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
@@ -196,7 +196,7 @@ namespace GmailGameNarrator
             return null;
         }
 
-        public static void MessageAllPlayers(Game.Game game, string body)
+        public static void MessageAllPlayers(Game game, string body)
         {
             game.Summary.AddEmail("Everyone", game.Subject, body);
             foreach (Player p in game.Players)
@@ -205,7 +205,7 @@ namespace GmailGameNarrator
             }
         }
 
-        public static void MessagePlayer(Player player, Game.Game game, string body)
+        public static void MessagePlayer(Player player, Game game, string body)
         {
             string subject = "Unknown Game";
             if (game != null)
@@ -224,9 +224,7 @@ namespace GmailGameNarrator
 
         private static void EnqueueMessage(string to, string subject, string body)
         {
-            //FEATURE Figure out how to make email clients treat each line as new
-            //The problem is gmail's "Quoted text"
-            //Tried: adding timestamp to end of message, tried adding random string to name of each br element
+            //FEATURE Confirm that using a different subject, prevents gmail from trimming/quoting messages
             if (to.Contains(Program.UnitTestAddress)) return;
             SimpleMessage outgoing = new SimpleMessage();
             outgoing.To = to;

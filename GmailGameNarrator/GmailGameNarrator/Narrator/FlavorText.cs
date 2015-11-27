@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GmailGameNarrator.Game
+namespace GmailGameNarrator.Narrator
 {
     /// <summary>
     /// This is intended to be a dynamic class at some point, using a theme and picking random snippets of descriptive text to make the game more varied and fun.

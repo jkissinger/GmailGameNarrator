@@ -1,4 +1,4 @@
-﻿using GmailGameNarrator.Game;
+﻿using GmailGameNarrator.Narrator;
 using System;
 using System.Collections.Generic;
 using System.Linq;

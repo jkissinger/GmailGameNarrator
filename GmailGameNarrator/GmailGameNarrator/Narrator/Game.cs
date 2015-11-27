@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using GmailGameNarrator.Game.Roles;
+using GmailGameNarrator.Narrator.Roles;
 using System.Linq;
 
-namespace GmailGameNarrator.Game
+namespace GmailGameNarrator.Narrator
 {
     public class Game
     {
@@ -55,7 +55,6 @@ namespace GmailGameNarrator.Game
             }
         }
         private bool AnonymousVoting = false;
-        //FEATURE Implement summary functionality
         public Summary Summary;
 
         public Game(int id, Player overlord)
@@ -324,7 +323,13 @@ namespace GmailGameNarrator.Game
             return teamIsValid;
         }
 
-        //GAME Only choose from roles that are not at their max
+        /// <summary>
+        /// Checks status of all roles and playres and randomly picks a role from the list of <see cref="GetAllowedRoles(List{Type}, Team, bool)"/>
+        /// </summary>
+        /// <param name="roleTypes"></param>
+        /// <param name="team"></param>
+        /// <param name="thisTeam"></param>
+        /// <returns>The legal, randomly chosen role</returns>
         private Role GetRandomRole(List<Type> roleTypes, Team team, bool thisTeam)
         {
             Type type = (Type)GetAllowedRoles(roleTypes, team, thisTeam).PickOne();

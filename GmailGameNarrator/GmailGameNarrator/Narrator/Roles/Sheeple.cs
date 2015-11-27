@@ -1,7 +1,7 @@
 ﻿using System;
-using GmailGameNarrator.Game.Teams;
+using GmailGameNarrator.Narrator.Teams;
 
-namespace GmailGameNarrator.Game.Roles
+namespace GmailGameNarrator.Narrator.Roles
 {
     public class Sheeple : Role
     {
@@ -13,7 +13,6 @@ namespace GmailGameNarrator.Game.Roles
             }
         }
 
-        //TODO Have this use team maxpercentage
         public override int MaxPercentage
         {
             get

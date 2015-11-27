@@ -1,4 +1,4 @@
-﻿using GmailGameNarrator.Game;
+﻿using GmailGameNarrator.Narrator;
 using GmailGameNarrator.Threads;
 using System;
 using System.IO;

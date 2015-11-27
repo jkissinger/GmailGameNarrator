@@ -116,25 +116,25 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Game\Actions\Action.cs" />
-    <Compile Include="Game\FlavorText.cs" />
-    <Compile Include="Game\Game.cs" />
-    <Compile Include="Game\GameX.cs" />
-    <Compile Include="Game\MessageParser.cs" />
-    <Compile Include="Game\GameSystem.cs" />
-    <Compile Include="Game\Player.cs" />
-    <Compile Include="Game\Roles\Antagonist.cs" />
-    <Compile Include="Game\Roles\Healer.cs" />
-    <Compile Include="Game\Roles\Investigator.cs" />
-    <Compile Include="Game\Roles\Wannabe.cs" />
-    <Compile Include="Game\Roles\Sheeple.cs" />
-    <Compile Include="Game\Roles\Role.cs" />
-    <Compile Include="Game\Summary.cs" />
-    <Compile Include="Game\Teams\SoloTeam.cs" />
-    <Compile Include="Game\Teams\Team.cs" />
-    <Compile Include="Game\Teams\AntagonistTeam.cs" />
-    <Compile Include="Game\Teams\SheepleTeam.cs" />
-    <Compile Include="Game\Actions\Vote.cs" />
+    <Compile Include="Narrator\Actions\Action.cs" />
+    <Compile Include="Narrator\FlavorText.cs" />
+    <Compile Include="Narrator\Game.cs" />
+    <Compile Include="Narrator\GameX.cs" />
+    <Compile Include="Narrator\MessageParser.cs" />
+    <Compile Include="Narrator\GameSystem.cs" />
+    <Compile Include="Narrator\Player.cs" />
+    <Compile Include="Narrator\Roles\Antagonist.cs" />
+    <Compile Include="Narrator\Roles\Healer.cs" />
+    <Compile Include="Narrator\Roles\Investigator.cs" />
+    <Compile Include="Narrator\Roles\Wannabe.cs" />
+    <Compile Include="Narrator\Roles\Sheeple.cs" />
+    <Compile Include="Narrator\Roles\Role.cs" />
+    <Compile Include="Narrator\Summary.cs" />
+    <Compile Include="Narrator\Teams\SoloTeam.cs" />
+    <Compile Include="Narrator\Teams\Team.cs" />
+    <Compile Include="Narrator\Teams\AntagonistTeam.cs" />
+    <Compile Include="Narrator\Teams\SheepleTeam.cs" />
+    <Compile Include="Narrator\Actions\Vote.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>

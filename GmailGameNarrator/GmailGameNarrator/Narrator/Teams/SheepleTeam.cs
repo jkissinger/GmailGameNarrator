@@ -1,4 +1,4 @@
-﻿namespace GmailGameNarrator.Game.Teams
+﻿namespace GmailGameNarrator.Narrator.Teams
 {
     public class SheepleTeam : Team
     {

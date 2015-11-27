@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GmailGameNarrator.Game
+namespace GmailGameNarrator.Narrator
 {
     /// <summary>
     /// Static extension class of <see cref="Game"/>.  No logic, just methods returning formatted strings.

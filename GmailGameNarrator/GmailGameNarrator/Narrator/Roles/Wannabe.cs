@@ -1,7 +1,7 @@
-﻿using GmailGameNarrator.Game.Teams;
+﻿using GmailGameNarrator.Narrator.Teams;
 using System;
 
-namespace GmailGameNarrator.Game.Roles
+namespace GmailGameNarrator.Narrator.Roles
 {
     public class Wannabe : Role
     {

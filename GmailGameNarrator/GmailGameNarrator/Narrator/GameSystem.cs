@@ -1,9 +1,9 @@
-﻿using GmailGameNarrator.Game.Roles;
+﻿using GmailGameNarrator.Narrator.Roles;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace GmailGameNarrator.Game
+namespace GmailGameNarrator.Narrator
 {
     public class GameSystem
     {
@@ -56,7 +56,7 @@ namespace GmailGameNarrator.Game
             List<Type> RoleTypes = new List<Type>();
             foreach (Type t in Assembly.GetExecutingAssembly().GetTypes())
             {
-                if (t.Namespace == "GmailGameNarrator.Game.Roles")
+                if (t.Namespace == "GmailGameGame.Roles")
                 {
                     if (!t.IsAbstract)
                     {

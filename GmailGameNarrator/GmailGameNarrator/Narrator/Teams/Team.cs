@@ -1,4 +1,4 @@
-﻿namespace GmailGameNarrator.Game
+﻿namespace GmailGameNarrator.Narrator
 {
     public abstract class Team
     {

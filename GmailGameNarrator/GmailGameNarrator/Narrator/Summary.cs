@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace GmailGameNarrator.Game
+namespace GmailGameNarrator.Narrator
 {
     public class Summary
     {

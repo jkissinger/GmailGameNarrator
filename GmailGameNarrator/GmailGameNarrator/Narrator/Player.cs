@@ -1,9 +1,9 @@
-﻿using GmailGameNarrator.Game.Roles;
+﻿using GmailGameNarrator.Narrator.Roles;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
-namespace GmailGameNarrator.Game
+namespace GmailGameNarrator.Narrator
 {
     public class Player
     {
@@ -21,7 +21,7 @@ namespace GmailGameNarrator.Game
             }
         }
         public Vote Vote { get; set; }
-        //GAME Switch this to Actions, and then have each role check the game's cycle, to validate.  Then have "DoNightActions" kick off every cycle, again checking the cycle in the role.
+        //TODO Have vote, day actions, stored here as well
         public ReadOnlyCollection<Action> Actions
         {
             get

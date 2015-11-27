@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
-using GmailGameNarrator.Game;
-using GmailGameNarrator.Game.Roles;
+using GmailGameNarrator.Narrator;
+using GmailGameNarrator.Narrator.Roles;
 using System;
 
 namespace GmailGameNarrator.Tests
@@ -19,7 +19,7 @@ namespace GmailGameNarrator.Tests
                 for (int i = 3; i < 25; i = i + 3)
                 {
                     List<Player> players = TestX.GenListOfPlayers(i);
-                    Game.Game game = new Game.Game(gameSystem.GetNextGameId(), players[0]);
+                    Game game = new Game(gameSystem.GetNextGameId(), players[0]);
                     Assert.IsTrue(validateTeamComposition(game));
                     for (int j = 1; j < players.Count; j++)
                     {
@@ -37,7 +37,7 @@ namespace GmailGameNarrator.Tests
         /// <summary>
         /// Ensures the minimum team composition doesn't exceed 100%.
         /// </summary>
-        private bool validateTeamComposition(Game.Game game)
+        private bool validateTeamComposition(Game game)
         {
             int totalPercent = 0;
             foreach (Team t in game.GetTeamsPlayingUnique())
@@ -58,7 +58,7 @@ namespace GmailGameNarrator.Tests
         /// <para /><see cref="Role.MaxPlayers"/> is not violated.
         /// </summary>
         /// <returns></returns>
-        private bool ValidateTeamMinPercent(Game.Game game)
+        private bool ValidateTeamMinPercent(Game game)
         {
             if (game.GetTeamsPlayingUnique().Count < 2) return false;
             foreach (Team t in game.GetTeamsPlayingUnique())
@@ -75,7 +75,7 @@ namespace GmailGameNarrator.Tests
         /// </summary>
         /// <param name="game"></param>
         /// <returns></returns>
-        private bool ValidateRoleMaxCount(Game.Game game)
+        private bool ValidateRoleMaxCount(Game game)
         {
             foreach (Role r in game.GetPlayingRoles())
             {
@@ -97,7 +97,7 @@ namespace GmailGameNarrator.Tests
         /// </summary>
         /// <param name="game"></param>
         /// <returns></returns>
-        private bool ValidateRoleMaxPercentage(Game.Game game)
+        private bool ValidateRoleMaxPercentage(Game game)
         {
             foreach (Role r in game.GetPlayingRoles())
             {

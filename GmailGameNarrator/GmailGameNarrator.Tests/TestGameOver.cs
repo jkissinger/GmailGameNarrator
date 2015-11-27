@@ -2,7 +2,7 @@
 using System.Text;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using GmailGameNarrator.Game;
+using GmailGameNarrator.Narrator;
 
 namespace GmailGameNarrator.Tests
 {
@@ -22,7 +22,7 @@ namespace GmailGameNarrator.Tests
                 for (int i = 3; i < 15; i = i + 3)
                 {
                     List<Player> players = TestX.GenListOfPlayers(i);
-                    Game.Game game = new Game.Game(gameSystem.GetNextGameId(), players[0]);
+                    Game game = new Game(gameSystem.GetNextGameId(), players[0]);
                     for (int j = 1; j < players.Count; j++)
                     {
                         game.AddPlayer(players[j]);

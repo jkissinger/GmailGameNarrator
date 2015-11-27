@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace GmailGameNarrator.Game
+namespace GmailGameNarrator.Narrator
 {
     public class MessageParser
     {
