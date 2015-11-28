@@ -130,12 +130,6 @@ namespace GmailGameNarrator.Narrator
                 HandleBadAction(game, player, action, result);
                 return;
             }
-            List<string> actions = new List<string>();
-            foreach(Action a in player.Actions)
-            {
-                actions.Add(player.Role.Name.b() + a.Parameter);
-            }
-            Gmail.MessagePlayer(player, game, "Your registered actions:<br />" + actions.HtmlBulletList());
             game.CheckEndOfCycle();
         }
 
@@ -144,7 +138,7 @@ namespace GmailGameNarrator.Narrator
             Player nominee = game.GetPlayerByName(action.Parameter);
             if(nominee == null)
             {
-                if (action.Parameter.Equals("no one") || action.Parameter.Equals("nobody"))
+                if (action.Parameter.Equals("no one") || action.Parameter.Equals("nobody") || action.Parameter.Equals("noone"))
                 {
                     Player NoOne = new Player("No one", "nobody");
                     nominee = NoOne;

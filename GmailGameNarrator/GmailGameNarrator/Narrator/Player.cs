@@ -75,37 +75,41 @@ namespace GmailGameNarrator.Narrator
             string result = "";
             if (game.ActiveCycle == Game.Cycle.Night)
             {
-                if (IsAlive) Role.DoNightActions(this, game);
+                if (IsAlive) result += Role.DoNightActions(this, game);
             }
             else Role.DoDayActions(this, game);
             return result;
         }
 
-        public void CheckForZombieBite(Game game)
+        public string CheckForZombieBite(Game game)
         {
-            if (Role.IsInfectionImmune) return;
+            if (Role.IsInfectionImmune) return "";
             string message = "";
+            string result = "";
             if (game.RoundCounter == BittenRound + 1)
             {
                 if (MathX.PercentChance(ZombieMaster.ChanceToTurn))
                 {
                     IsAlive = false;
                     message += "You succumbed to the zombie bite last night, and have turned into a zombie! You are now dead.";
+                    result += "Just as the sun set completely, " + Name.b() + " turned into a zombie!  You quickly banded together and put them out of their misery.  But one of you may have been bitten in the process...";
                     if (MathX.PercentChance(ZombieMaster.ChanceToTurn))
                     {
                         //this bypasses protection because it technically happens before night starts
                         Player bitten = (Player)game.GetLivingPlayers().PickOne();
                         message += " After turning into a zombie, you bit " + bitten.Name.b() + ".";
                         bitten.BittenRound = game.RoundCounter;
+                        Gmail.MessagePlayer(bitten, game, "While putting " + Name.b() + " down, you were bitten! Hopefully you won't turn tomorrow night...");
                     }
                 }
                 else
                 {
                     message += "You shrugged off the effects of the zombie bite and are ready to perform your normal night actions.";
                 }
-                game.Summary.AddEventLi(Name.b() + ": " + message);
+                game.Summary.AddEventLi(game.CycleTitle + " - " + Name.b() + ": " + message);
                 Gmail.MessagePlayer(this, game, message);
             }
+            return result;
         }
 
         public void ClearNightActions()

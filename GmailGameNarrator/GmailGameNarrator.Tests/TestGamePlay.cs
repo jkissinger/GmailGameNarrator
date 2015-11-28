@@ -16,7 +16,7 @@ namespace GmailGameNarrator.Tests
         /// <summary>
         /// Number of tests to run
         /// </summary>
-        private int numTests = 4;
+        private int numTests = 3;
         /// <summary>
         /// Minimum player count to test
         /// </summary>
@@ -35,7 +35,7 @@ namespace GmailGameNarrator.Tests
         {
             for (int tests = 0; tests < numTests; tests++)
             {
-                for (int i = minPlayers; i < maxPlayers+1; i = i + iterator)
+                for (int i = minPlayers; i < maxPlayers + 1; i = i + iterator)
                 {
                     List<Player> players = TestX.GenListOfPlayers(i);
                     Game game = new Game(gameSystem.GetNextGameId(), players[0]);
@@ -46,7 +46,7 @@ namespace GmailGameNarrator.Tests
                     Assert.IsTrue(game.Start());
                     while (game.IsInProgress())
                     {
-                        if(game.ActiveCycle == Game.Cycle.Day) DoDayVotes(game);
+                        if (game.ActiveCycle == Game.Cycle.Day) DoDayVotes(game);
                         else DoNightActions(game);
                     }
                 }
@@ -71,20 +71,26 @@ namespace GmailGameNarrator.Tests
 
         private void DoNightActions(Game game)
         {
+            Player sheepleCandidate = (Player)LivingSheeple(game).PickOne();
             foreach (Player p in game.GetLivingPlayers())
             {
+                Player candidate = (Player)game.GetLivingPlayers().PickOne();
+                Narrator.Action action = null;
+                if (p.Team.Equals("Illuminati")) action = GenerateAction(game, p, sheepleCandidate);
+                else action = GenerateAction(game, p, candidate);
+                gameSystem.DoAction(game, p, action);
                 while (p.Actions.Count == 0)
                 {
-                    Narrator.Action action = GenerateAction(game, p);
-                    gameSystem.DoAction(game, p, action);
+                    if (p.Team.Equals("Illuminati")) sheepleCandidate = (Player)LivingSheeple(game).PickOne();
+                    else candidate = (Player)game.GetLivingPlayers().PickOne();
+                    action = GenerateAction(game, p, candidate);
+                    gameSystem.DoAction(game, p, action);                    
                 }
             }
         }
 
-        private Narrator.Action GenerateAction(Game game, Player p)
+        private Narrator.Action GenerateAction(Game game, Player p, Player candidate)
         {
-            Player candidate = (Player)game.GetLivingPlayers().PickOne();
-            if (p.Team.Equals("Illuminati")) candidate = (Player)LivingSheeple(game).PickOne();
             string param = p.Role.ActionText;
             if (param.Length > 0)
             {

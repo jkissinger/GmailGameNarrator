@@ -9,7 +9,7 @@ namespace GmailGameNarrator.Narrator.Roles
         {
             get
             {
-                return "You are a " + Name.b() + ". At night, send a message with " + Name.b() + " as the body.";
+                return "At night, send a message with " + Name.b() + " as the body.   Nothing will happen, but this is to ensure everyone has a night action.";
             }
         }
 

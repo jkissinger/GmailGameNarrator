@@ -9,7 +9,7 @@ namespace GmailGameNarrator.Narrator.Roles
 {
     class ZombieMaster : Role
     {
-        public static int ChanceToTurn = 90;
+        public static int ChanceToTurn = 75;
         public override string Description
         {
             get
@@ -91,7 +91,7 @@ namespace GmailGameNarrator.Narrator.Roles
         }
 
         /// <summary>
-        /// Returns true only if this player is the only remaining player alive.
+        /// Returns true if this player is the only remaining player alive.
         /// </summary>
         /// <param name="player"></param>
         /// <param name="game"></param>
@@ -116,7 +116,7 @@ namespace GmailGameNarrator.Narrator.Roles
             else
             {
                 nominee.BittenRound = game.RoundCounter;
-                message += "You were able to " + ActionText + " " + nominee.Name.b() + "! There is a " + ChanceToTurn + "% chance they will turn into a zombie tomorrow night!";
+                message += "You bit " + nominee.Name.b() + "! There is a " + ChanceToTurn + "% chance they will turn into a zombie tomorrow night!";
                 result = " bit " + nominee.Name.b() + ".";
             }
             game.Summary.AddEventLi(game.CycleTitle + " - " + player.Name.b() + result);

@@ -176,6 +176,7 @@ namespace GmailGameNarrator.Narrator
             {
                 MyCycle = Cycle.Day;
                 RoundCounter++;
+                Gmail.MessageAllPlayers(this, CycleTitle + " has begun, don't forget to vote for the player you want cast out, or vote no one.");
             }
             //Reset players
             foreach (Player p in Players)
@@ -209,11 +210,8 @@ namespace GmailGameNarrator.Narrator
                 body += FlavorText.Divider + "You have been assigned the role of <b>" + r.Name + "</b> and are on the <b>" + r.Team.Name + "</b> team.<br />";
                 body += r.Description + "<br />";
                 string teammates = ListTeammates(p);
-                if (String.IsNullOrEmpty(teammates)) teammates = "You have no teammates.";
-                if (r.Team.KnowsTeammates) body += "Teammates:<br />" + teammates;
-                body += FlavorText.Divider + CycleTitle + " has begun, use the commands below to take an action.";
-                body += FlavorText.Divider + this.Status();
                 body += FlavorText.Divider + this.Help(p);
+                body += FlavorText.Divider + this.Status();
                 Gmail.MessagePlayer(p, this, body);
             }
 
@@ -380,12 +378,18 @@ namespace GmailGameNarrator.Narrator
         private string ListTeammates(Player player)
         {
             string message = "";
-            List<string> teammates = new List<string>();
-            foreach (Player p in Players)
+            if (player.Team.KnowsTeammates)
             {
-                if (!player.Equals(p) && player.Team.Equals(p.Team)) teammates.Add("<b>" + p.Name + "</b>");
+                message += FlavorText.Divider + "Teammates:".li();
+                List<string> teammates = new List<string>();
+                foreach (Player p in Players)
+                {
+                    if (!player.Equals(p) && player.Team.Equals(p.Team)) teammates.Add(p.Name.b());
+                }
+                if (teammates.Count == 0) teammates.Add("You have no teammates.");
+                message += teammates.HtmlBulletList();
+                message = message.tag("ul");
             }
-            message = teammates.HtmlBulletList();
             return message;
         }
 
@@ -403,13 +407,14 @@ namespace GmailGameNarrator.Narrator
         private void EndOfDay()
         {
             List<string> votingResults = new List<string>();
+            List<string> anonVotingResults = new List<string>();
             List<Player> candidates = new List<Player>();
             foreach (Player p in Players)
             {
                 if (p.IsAlive)
                 {
                     candidates.Add(p.Vote.Candidate);
-                    if (!AnonymousVoting) votingResults.Add(p.Name.b() + " voted for: " + p.Vote.Candidate.Name.i());
+                    votingResults.Add(p.Name.b() + " voted for: " + p.Vote.Candidate.Name.i());
                 }
             }
             Dictionary<Player, int> candidateCounts = candidates.GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
@@ -421,7 +426,7 @@ namespace GmailGameNarrator.Narrator
             {
                 //We found someone, but keep processing to record all the results.
                 if (c.Value >= max) electee = c.Key;
-                if (AnonymousVoting) votingResults.Add(c.Key.Name + ": " + c.Value);
+                anonVotingResults.Add(c.Key.Name + ": " + c.Value);
             }
             string voteMessage = "";
             //The first 2 if statements can't trigger a game end condition because no one dies.
@@ -441,15 +446,15 @@ namespace GmailGameNarrator.Narrator
             }
             Summary.AddEventLi("Voting Results: " + voteMessage);
             Summary.AddDetailEvent(votingResults.HtmlBulletList());
-            ShowVotes(votingResults, voteMessage);
+            if (AnonymousVoting) ShowVotes(anonVotingResults, voteMessage);
+            else ShowVotes(votingResults, voteMessage);
 
             if (IsGameOver()) return;
             NextCycle();
             foreach (Player p in Players)
             {
                 string message = p.Role.Instructions;
-                string teammates = ListTeammates(p);
-                if (p.Team.KnowsTeammates && !String.IsNullOrEmpty(teammates)) message += FlavorText.Divider + teammates;
+                message += ListTeammates(p);
                 if (p.IsAlive) Gmail.MessagePlayer(p, this, message);
             }
 
@@ -471,7 +476,8 @@ namespace GmailGameNarrator.Narrator
             //Check for zombie bites; happens first thing at night
             foreach (Player p in GetLivingPlayers())
             {
-                p.CheckForZombieBite(this);
+                string msg = p.CheckForZombieBite(this);
+                if (!String.IsNullOrEmpty(msg) && !nightSummary.Contains(msg)) nightSummary.Add(msg);
             }
             
             //This is very inefficient, but even with a game of 20 players, it will only take 100 iterations, which is trivial
@@ -479,10 +485,9 @@ namespace GmailGameNarrator.Narrator
             {
                 foreach (Player p in GetLivingPlayers())
                 {
-                    if (p.IsAlive && p.Role.NightActionPriority == i)
+                    if (p.Role.NightActionPriority == i)
                     {
-                        string msg = "";
-                        if (p.IsAlive) msg = p.DoActions(this);
+                        string msg = p.DoActions(this);
                         if (!String.IsNullOrEmpty(msg) && !nightSummary.Contains(msg)) nightSummary.Add(msg);
                     }
                 }
@@ -490,7 +495,7 @@ namespace GmailGameNarrator.Narrator
 
             string message = "The night has come to a close, ";
             if (nightSummary.Count > 0) message += "this is what happened:<br />" + nightSummary.HtmlBulletList();
-            else message = "it was completely uneventful.";
+            else message += "it was completely uneventful.";
             Gmail.MessageAllPlayers(this, message);
 
             if (!IsGameOver())

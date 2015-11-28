@@ -74,7 +74,7 @@ namespace GmailGameNarrator.Narrator.Roles
         {
             get
             {
-                return "You've had enough of the Sheeple eating your food and using your shelter.  With the other members of your team, you vote and then cast out one of the Sheeple the enclave, knowing they will die quickly outside.";
+                return "You've had enough of the Sheeple eating your food and using your shelter.  With the other members of your team, you vote and then cast out one of the Sheeple from the enclave, knowing they will die quickly outside.";
             }
         }
 
