@@ -53,5 +53,15 @@ namespace GmailGameNarrator
             randomPlayers.AddRange(players.OrderBy(x => r.Next()).Take(players.Count));
             return randomPlayers;
         }
+
+        public static bool PercentChance(int percent)
+        {
+            int chance = r.Next(1, 101);
+            if (chance <= percent)
+            {
+                return true;
+            }
+            return false;
+        }
     }
 }

@@ -124,11 +124,12 @@
     <Compile Include="Narrator\GameSystem.cs" />
     <Compile Include="Narrator\Player.cs" />
     <Compile Include="Narrator\Roles\Antagonist.cs" />
-    <Compile Include="Narrator\Roles\Healer.cs" />
+    <Compile Include="Narrator\Roles\Protector.cs" />
     <Compile Include="Narrator\Roles\Investigator.cs" />
     <Compile Include="Narrator\Roles\Wannabe.cs" />
     <Compile Include="Narrator\Roles\Sheeple.cs" />
     <Compile Include="Narrator\Roles\Role.cs" />
+    <Compile Include="Narrator\Roles\ZombieMaster.cs" />
     <Compile Include="Narrator\Summary.cs" />
     <Compile Include="Narrator\Teams\SoloTeam.cs" />
     <Compile Include="Narrator\Teams\Team.cs" />

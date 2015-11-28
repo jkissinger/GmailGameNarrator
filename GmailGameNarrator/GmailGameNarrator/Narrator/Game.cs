@@ -14,7 +14,7 @@ namespace GmailGameNarrator.Narrator
         {
             get
             {
-                if(IsInProgress())
+                if (IsInProgress())
                 {
                     return FullTitle;
                 }
@@ -32,7 +32,7 @@ namespace GmailGameNarrator.Narrator
             }
         }
         private IList<Player> MyPlayers = new List<Player>();
-        private int RoundCounter = 0;
+        public int RoundCounter = 0;
         public Cycle ActiveCycle { get { return MyCycle; } }
         private Cycle MyCycle;
         public enum Cycle
@@ -73,7 +73,7 @@ namespace GmailGameNarrator.Narrator
 
         public void AddPlayer(Player player)
         {
-            
+
             MyPlayers.Add(player);
         }
 
@@ -467,14 +467,22 @@ namespace GmailGameNarrator.Narrator
         private void EndOfNight()
         {
             List<string> nightSummary = new List<string>();
+            
+            //Check for zombie bites; happens first thing at night
+            foreach (Player p in GetLivingPlayers())
+            {
+                p.CheckForZombieBite(this);
+            }
+            
             //This is very inefficient, but even with a game of 20 players, it will only take 100 iterations, which is trivial
             for (int i = 0; i < 5; i++)
             {
-                foreach (Player p in Players)
+                foreach (Player p in GetLivingPlayers())
                 {
                     if (p.IsAlive && p.Role.NightActionPriority == i)
                     {
-                        string msg = p.DoActions(this);
+                        string msg = "";
+                        if (p.IsAlive) msg = p.DoActions(this);
                         if (!String.IsNullOrEmpty(msg) && !nightSummary.Contains(msg)) nightSummary.Add(msg);
                     }
                 }
@@ -518,6 +526,11 @@ namespace GmailGameNarrator.Narrator
                 GameOver(winners);
                 return true;
             }
+            if (GetLivingPlayers().Count == 0)
+            {
+                GameOver(winners);
+                return true;
+            }
             return false;
         }
 
@@ -538,6 +551,7 @@ namespace GmailGameNarrator.Narrator
             }
             isInProgress = false;
             string message = "The game is over.  Winners:".li();
+            if (winnersList.Count == 0) message += "No one!".li();
             message += winnersList.HtmlBulletList();
             message += "Everyone else:".li();
             message += othersList.HtmlBulletList();

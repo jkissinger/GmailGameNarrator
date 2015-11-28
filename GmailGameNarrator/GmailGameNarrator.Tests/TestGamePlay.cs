@@ -16,15 +16,15 @@ namespace GmailGameNarrator.Tests
         /// <summary>
         /// Number of tests to run
         /// </summary>
-        private int numTests = 1;
+        private int numTests = 4;
         /// <summary>
         /// Minimum player count to test
         /// </summary>
-        private int minPlayers = 100;
+        private int minPlayers = 10;
         /// <summary>
         /// Maximum player count to test
         /// </summary>
-        private int maxPlayers = 100;
+        private int maxPlayers = 10;
         /// <summary>
         /// Number to increase player count by.
         /// </summary>

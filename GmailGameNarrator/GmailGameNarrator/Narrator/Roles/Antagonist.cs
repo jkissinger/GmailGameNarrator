@@ -18,7 +18,7 @@ namespace GmailGameNarrator.Narrator.Roles
         {
             get
             {
-                return "At night, vote for a player to cast out, like this \"" + Name.b() + " vote " + "name".i() + "\" where " + "name".i() + " is the player you want to cast out.";
+                return "At night, vote for a player to cast out, like this \"" + ActionText.b() + " name".i() + "\" where " + "name".i() + " is the player you want to cast out.  You must have a consensus with your fellow " + Team + " or no one will be cast out!";
             }
         }
 
@@ -125,14 +125,14 @@ namespace GmailGameNarrator.Narrator.Roles
 
         private Player GetNominee(Player player, Game game)
         {
-            string nomineeName = player.Actions[0].Parameter.GetTextAfter("vote ");
+            string nomineeName = player.Actions[0].Parameter.GetTextAfter(ActionText);
             Player newNominee = game.GetPlayerByName(nomineeName);
             return newNominee;
         }
 
         public override string ValidateAction(Player player, Action action, Game game)
         {
-            string nomineeName = action.Parameter.GetTextAfter("vote ");
+            string nomineeName = action.Parameter.GetTextAfter(ActionText);
             Player nominee = game.GetPlayerByName(nomineeName);
             if (nominee == null) return nomineeName.b() + " is not a valid player in " + game.Title;
             else if (nominee.Team.Equals(player.Team)) return "You cannot vote for " + nomineeName.b() + ".  They are on your team!";

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GmailGameNarrator.Narrator.Roles
 {
-    public class Healer : Sheeple
+    public class Protector : Sheeple
     {
         public override string Name
         {

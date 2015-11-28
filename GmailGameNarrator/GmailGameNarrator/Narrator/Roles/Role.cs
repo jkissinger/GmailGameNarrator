@@ -52,6 +52,13 @@ namespace GmailGameNarrator.Narrator.Roles
                 return false;
             }
         }
+        public virtual bool IsInfectionImmune
+        {
+            get
+            {
+                return false;
+            }
+        }
         /// <summary>
         /// Likelihood of assigning this role, to make the more fun roles more likely to be picked.  Must be at least 1.
         /// </summary>
