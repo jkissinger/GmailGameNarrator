@@ -14,8 +14,8 @@ namespace GmailGameNarrator.Narrator
         public static string Status(this Game game)
         {
             string status = "Status of " + game.Title + ":<br /><ul>"
-                + "<li>In progress: " + (game.IsInProgress() ? "Yes</li>" : "No</li>")
-                + (game.IsInProgress() ? "<li>Cycle: " + game.CycleTitle + "</li>" : "")
+                + "<li>In progress: " + (game.IsInProgress ? "Yes</li>" : "No</li>")
+                + (game.IsInProgress ? "<li>Cycle: " + game.CycleTitle + "</li>" : "")
                 + "<li>Players:</li>" + game.ListPlayers() + "</ul>";
             return status;
         }
@@ -27,7 +27,7 @@ namespace GmailGameNarrator.Narrator
             {
                 string livingState = "";
                 string cycleStatus = "";
-                if (game.IsInProgress())
+                if (game.IsInProgress)
                 {
                     if (player.IsAlive)
                     {
@@ -79,8 +79,8 @@ namespace GmailGameNarrator.Narrator
         public static string Help(this Game game, Player player)
         {
             string commands = "<ul>";
-            if (player.IsAlive && game.IsInProgress() && game.ActiveCycle == Game.Cycle.Day) commands += "<li>To vote for someone to be cast out: <b>Vote</b> <i>name</i></li>";
-            if (game.IsOverlord(player) && !game.IsInProgress()) commands += "<li>To start the game: <b>Start</b>.</li>";
+            if (player.IsAlive && game.IsInProgress && game.ActiveCycle == Game.Cycle.Day) commands += "<li>To vote for someone to be cast out: <b>Vote</b> <i>name</i></li>";
+            if (game.IsOverlord(player) && !game.IsInProgress) commands += "<li>To start the game: <b>Start</b>.</li>";
             if (game.IsOverlord(player)) commands += "<li>To cancel the game: <b>Cancel</b></li>";
             if (game.IsOverlord(player)) commands += "<li>To kick a player from the game: <b>Kick</b> <i>name</i></li>";
             if (game.IsOverlord(player)) commands += "<li>To ban a player from the game: <b>Ban</b> <i>name</i></li>";

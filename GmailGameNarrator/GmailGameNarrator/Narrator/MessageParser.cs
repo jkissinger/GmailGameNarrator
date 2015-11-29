@@ -27,68 +27,68 @@ namespace GmailGameNarrator.Narrator
 
         public void ParseMessage(SimpleMessage message)
         {
-            string subject = message.NiceSubject().Replace("re: ", "");
+            int id = ProcessSubject(message);
 
-            if (subject.Equals("new game"))
+            if (id == -1)
             {
-                DoActions(message, null);
+                ProcessActions(message, null);
             }
-            else if (subject.StartsWith("game "))
+            else if (id >= 0)
             {
-                Game game = GetGameByMessage(message);
-                //Errors are handled by GetGameByMessage above, don't do anything here
-                if (game != null) DoActions(message, game);
+                Game game = GameSystem.Instance.GetGameById(id);
+                if (game == null)
+                {
+                    HandleBadMessage(message, "You referenced an invalid game id: " + id);
+                }
+                else ProcessActions(message, game);
             }
         }
 
-        private Game GetGameByMessage(SimpleMessage message)
+        /// <summary>
+        /// Process the message subject, returning the id of the game referenced, or -1 if referencing a new game request.  Otherwise -2 for malformed requests.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        private int ProcessSubject(SimpleMessage message)
         {
-            string subject = message.NiceSubject();
-
-            int id;
             try
             {
-                string strId = subject.GetTextAfter("game ");
+                string subject = message.Subject.Trim().ToLowerInvariant();
+                if (subject.StartsWith("new game")) return -1;
+                string strId = subject.GetTextAfter("game");
                 if (strId.Contains(" ")) strId = strId.GetTextBefore(" ");
-                id = Int32.Parse(strId);
+                if (String.IsNullOrEmpty(strId)) throw new Exception("No game Id found.");
+                int id = Int32.Parse(strId);
+                return id;
             }
             catch (Exception e)
             {
                 HandleBadMessage(message, "Invalid syntax in your subject, should be \"Game #\" where # is your game id.", e);
-                return null;
+                return -2;
             }
-
-            Game game = GameSystem.Instance.GetGameById(id);
-            if (game == null)
-            {
-                HandleBadMessage(message, "You referenced an invalid game id: " + id);
-            }
-
-            return game;
         }
         /// <summary>
         /// Processes all actions in the message, calls <see cref="ParseActions(SimpleMessage)"/> to get a list of valid actions.
-        /// Passes each action to <see cref="GameSystem.ProcessAction(Game, Player, Action)"/>.
+        /// Passes each action to <see cref="GameSystem.PerformAction(Game, Player, Action)"/>.
         /// </summary>
         /// <param name="message">The message to process</param>
         /// <param name="game">The game the player is playing in</param>
         /// <seealso cref="ParseActions(SimpleMessage)"/>
-        private void DoActions(SimpleMessage message, Game game)
+        private void ProcessActions(SimpleMessage message, Game game)
         {
             GameSystem gameSystem = GameSystem.Instance;
             string address = message.From;
-            Player player = gameSystem.GetPlayerByAddress(address);
+            Player player = null;
+            if (game != null) player = game.GetPlayer("", address);
             List<Action> actions = ParseActions(message, player, game);
 
-            if (player == null)
-            {
-                gameSystem.JoinGame(address, actions, game);
-            }
+            if (game == null) gameSystem.NewGame(message, actions);
+            else if (player == null) gameSystem.JoinGame(address, actions, game);
             else
             {
                 foreach (Action action in actions)
                 {
-                    gameSystem.ProcessAction(game, player, action);
+                    gameSystem.PerformAction(game, player, action);
                 }
             }
         }
@@ -96,32 +96,75 @@ namespace GmailGameNarrator.Narrator
         private List<Action> ParseActions(SimpleMessage message, Player player, Game game)
         {
             List<Action> actions = new List<Action>();
+
             foreach (string line in message.BodyAsLines())
             {
-                foreach (var e in Enum.GetValues(typeof(GameSystem.ActionEnum)))
+                Action action = null;
+                if (player != null && game != null && game.IsInProgress)
                 {
-                    string eWithSpaces = e.ToString().AddSpaces();
-                    if (line.StartsWith(eWithSpaces.ToLowerInvariant()))
-                    {
-                        GameSystem.ActionEnum actionEnum = (GameSystem.ActionEnum)Enum.Parse(typeof(GameSystem.ActionEnum), e.ToString());
-                        string parameter = line.GetTextAfter(eWithSpaces).Trim();
-                        Action action = new Action(actionEnum, parameter);
-                        actions.Add(action);
-                    }
+                    action = ParseGameAction(line, player, game);
                 }
-                if (game != null && game.IsInProgress())
+                if (action == null)
                 {
-                    string actionText = player.Role.ActionText.ToLowerInvariant();
-                    if (line.StartsWith(actionText))
-                    {
-                        string parameter = line.GetTextAfter(actionText).Trim();
-                        Action action = new Action(GameSystem.ActionEnum.Role, parameter);
-                        actions.Add(action);
-                    }
+                    action = ParseSystemAction(line);
                 }
+                if (action != null) actions.Add(action);
             }
 
             return actions;
+        }
+
+        /// <summary>
+        /// Parses a line of the body of a message for system commands.
+        /// </summary>
+        /// <param name="line"></param>
+        /// <returns></returns>
+        private Action ParseSystemAction(string line)
+        {
+            foreach (var e in Enum.GetValues(typeof(GameSystem.ActionEnum)))
+            {
+                string eWithSpaces = e.ToString().AddSpaces();
+                if (line.StartsWith(eWithSpaces.ToLowerInvariant()))
+                {
+                    GameSystem.ActionEnum actionEnum = (GameSystem.ActionEnum)Enum.Parse(typeof(GameSystem.ActionEnum), e.ToString());
+                    return StringToAction(line, actionEnum, eWithSpaces.ToLowerInvariant());
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Parses a line of the body for game commands.
+        /// </summary>
+        /// <param name="line"></param>
+        /// <param name="player"></param>
+        /// <returns></returns>
+        private Action ParseGameAction(string line, Player player, Game game)
+        {
+            string actionText = player.Role.ActionText.ToLowerInvariant();
+            if (line.StartsWith(actionText) && game.ActiveCycle == Game.Cycle.Night)
+            {
+                return StringToAction(line, GameSystem.ActionEnum.Role, actionText);
+            }
+            if (line.StartsWith("vote") && player.IsAlive && game.ActiveCycle == Game.Cycle.Day)
+            {
+                return StringToAction(line, GameSystem.ActionEnum.Vote, "vote");
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Converts a given line to an <see cref="Action"/> of type actionType.
+        /// </summary>
+        /// <param name="line"></param>
+        /// <param name="actionType"></param>
+        /// <param name="actionText"></param>
+        /// <returns></returns>
+        public Action StringToAction(string line, GameSystem.ActionEnum actionType, string actionText)
+        {
+            string parameter = line.GetTextAfter(actionText).Trim();
+            Action action = new Action(actionType, parameter);
+            return action;
         }
 
         private void HandleBadMessage(SimpleMessage message, string error, Exception e)

@@ -121,9 +121,11 @@ namespace GmailGameNarrator.Narrator
             return result;
         }
 
-        public void ClearNightActions()
+        public void Reset()
         {
+            Vote = null;
             MyActions.Clear();
+            IsProtected = false;
         }
 
         //==========================

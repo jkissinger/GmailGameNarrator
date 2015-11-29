@@ -41,19 +41,20 @@ namespace GmailGameNarrator.Narrator.Roles
         public override string DoNightActions(Player player, Game game)
         {
             string victimName = player.Actions[0].Parameter;
-            Player nominee = game.GetPlayerByName(victimName);
+            Player nominee = game.GetPlayer(victimName, "");
             string message = "";
             string result = "";
-            if (player.Attack(this, false))
+            if (nominee.Attack(this, false))
             {
-                message += "You were unable to bite " + nominee.Name.b() + " because someone was protecting them!";
-                result = " tried to bite " + nominee.Name.b() + " But they were protected.";
-            }
-            else
-            {
+
                 nominee.BittenRound = game.RoundCounter;
                 message += "You bit " + nominee.Name.b() + "! There is a " + ChanceToTurn + "% chance they will turn into a zombie tomorrow night!";
                 result = " bit " + nominee.Name.b() + ".";
+            }
+            else
+            {
+                message += "You were unable to bite " + nominee.Name.b() + " because someone was protecting them!";
+                result = " tried to bite " + nominee.Name.b() + " But they were protected.";
             }
             game.Summary.AddEventLi(game.CycleTitle + " - " + player.Name.b() + result);
             Gmail.MessagePlayer(player, game, message);
@@ -63,7 +64,7 @@ namespace GmailGameNarrator.Narrator.Roles
         public override string ValidateAction(Player player, Action action, Game game)
         {
             string nomineeName = action.Parameter;
-            Player nominee = game.GetPlayerByName(nomineeName);
+            Player nominee = game.GetPlayer(nomineeName, "");
             if (nominee == null) return nomineeName.b() + " is not a valid player in " + game.Title;
             else if (nominee.Equals(player)) return "You cannot bite yourself!";
             else if (!nominee.IsAlive) return "Cannot bite " + nomineeName.b() + ", they are already dead!";

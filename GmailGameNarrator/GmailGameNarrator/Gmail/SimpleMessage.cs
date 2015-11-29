@@ -50,10 +50,5 @@ namespace GmailGameNarrator
             }
             return lines;
         }
-
-        public string NiceSubject()
-        {
-            return Subject.Trim().ToLowerInvariant();
-        }
     }
 }

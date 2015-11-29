@@ -69,7 +69,7 @@ namespace GmailGameNarrator.Narrator.Roles
         private Player GetNominee(Player player, Game game)
         {
             string nomineeName = player.Actions[0].Parameter;
-            Player newNominee = game.GetPlayerByName(nomineeName);
+            Player newNominee = game.GetPlayer(nomineeName, "");
             return newNominee;
         }
 
@@ -77,7 +77,7 @@ namespace GmailGameNarrator.Narrator.Roles
         public override string ValidateAction(Player player, Action action, Game game)
         {
             string nomineeName = action.Parameter;
-            Player nominee = game.GetPlayerByName(nomineeName);
+            Player nominee = game.GetPlayer(nomineeName, "");
             if (nominee == null) return nomineeName.b() + " is not a valid player in " + game.Title;
             else if (nominee.Team.Equals(player.Team)) return "You cannot vote for " + nomineeName.b() + ".  They are on your team!";
             else if (!nominee.IsAlive) return "Vote rejected. " + nomineeName.b() + " is already dead!";

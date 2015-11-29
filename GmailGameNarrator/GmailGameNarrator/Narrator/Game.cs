@@ -14,7 +14,7 @@ namespace GmailGameNarrator.Narrator
         {
             get
             {
-                if (IsInProgress())
+                if (IsInProgress)
                 {
                     return FullTitle;
                 }
@@ -23,7 +23,7 @@ namespace GmailGameNarrator.Narrator
         }
         public string Title { get { return "Game " + Id; } }
         public Player Overlord { get; }
-        private bool isInProgress { get; set; }
+        public bool IsInProgress { get; private set; }
         public ReadOnlyCollection<Player> Players
         {
             get
@@ -62,13 +62,8 @@ namespace GmailGameNarrator.Narrator
             Id = id;
             Overlord = overlord;
             MyPlayers.Add(overlord);
-            isInProgress = false;
+            IsInProgress = false;
             Summary = new Summary(this);
-        }
-
-        public bool IsInProgress()
-        {
-            return isInProgress;
         }
 
         public void AddPlayer(Player player)
@@ -112,23 +107,21 @@ namespace GmailGameNarrator.Narrator
             return players;
         }
 
-        public Player GetPlayerByName(string name)
+        /// <summary>
+        /// Returns the player in this game with the given name or address, either or both may be supplied.  The first match is returned.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        public Player GetPlayer(string name, string address)
         {
             foreach (Player p in Players)
             {
-                if (p.Name.ToLowerInvariant().Equals(name)) return p;
+                if (!String.IsNullOrEmpty(name) && p.Name.ToLowerInvariant().Equals(name)) return p;
+                if (!String.IsNullOrEmpty(address) && p.Address.ToLowerInvariant().Equals(address)) return p;
             }
 
             return null;
-        }
-
-        public bool IsPlaying(Player player)
-        {
-            for (int i = 0; i < Players.Count; i++)
-            {
-                if (Players[i].Address.Equals(player.Address)) return true;
-            }
-            return false;
         }
 
         public bool IsOverlord(Player player)
@@ -181,9 +174,7 @@ namespace GmailGameNarrator.Narrator
             //Reset players
             foreach (Player p in Players)
             {
-                p.Vote = null;
-                p.ClearNightActions();
-                p.IsProtected = false;
+                p.Reset();
             }
             Summary.NewCycle(this);
         }
@@ -200,7 +191,7 @@ namespace GmailGameNarrator.Narrator
             //Initialize game
             RoundCounter++;
             MyCycle = Cycle.Day;
-            isInProgress = true;
+            IsInProgress = true;
 
             //Iterate again after roles are finalized to setup the players and notify them.
             foreach (Player p in Players)
@@ -212,6 +203,7 @@ namespace GmailGameNarrator.Narrator
                 string teammates = ListTeammates(p);
                 body += FlavorText.Divider + this.Help(p);
                 body += FlavorText.Divider + this.Status();
+                p.Reset();
                 Gmail.MessagePlayer(p, this, body);
             }
 
@@ -554,7 +546,7 @@ namespace GmailGameNarrator.Narrator
                 string msg = o.Name.b() + " as " + o.Role.Name.b() + " for the " + o.Team.Name.b();
                 othersList.Add(msg);
             }
-            isInProgress = false;
+            IsInProgress = false;
             string message = "The game is over.  Winners:".li();
             if (winnersList.Count == 0) message += "No one!".li();
             message += winnersList.HtmlBulletList();

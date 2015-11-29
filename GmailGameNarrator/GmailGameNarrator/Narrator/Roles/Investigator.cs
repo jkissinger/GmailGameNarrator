@@ -22,7 +22,7 @@ namespace GmailGameNarrator.Narrator.Roles
         public override string DoNightActions(Player player, Game game)
         {
             string nomineeName = player.Actions[0].Parameter;
-            Player nominee = game.GetPlayerByName(nomineeName);
+            Player nominee = game.GetPlayer(nomineeName, "");
             Gmail.MessagePlayer(player, game, "You have investigated " + nominee.Name.b() + " and determined their allegiance is with the " + nominee.Team.b());
             game.Summary.AddEventLi(game.CycleTitle + " - " + player.Name.b() + " investigated " + nominee.Name.b() + ". And found out their allegiance is with the " + nominee.Team.b());
             return "";
@@ -31,7 +31,7 @@ namespace GmailGameNarrator.Narrator.Roles
         public override string ValidateAction(Player player, Action action, Game game)
         {
             string nomineeName = action.Parameter;
-            Player nominee = game.GetPlayerByName(nomineeName);
+            Player nominee = game.GetPlayer(nomineeName, "");
             if (nominee == null) return nomineeName.b() + " is not a valid player in " + game.Title;
             else if (nominee.Equals(player)) return "You cannot " + ActionText + " yourself!";
             else if (!nominee.IsAlive) return "Choice rejected: " + nomineeName.b() + " is already dead!";

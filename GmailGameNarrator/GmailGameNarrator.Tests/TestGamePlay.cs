@@ -1,8 +1,7 @@
-﻿using System;
-using System.Text;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using GmailGameNarrator.Narrator;
+using System;
 
 namespace GmailGameNarrator.Tests
 {
@@ -16,15 +15,15 @@ namespace GmailGameNarrator.Tests
         /// <summary>
         /// Number of tests to run
         /// </summary>
-        private int numTests = 3;
+        private int numTests = 1;
         /// <summary>
         /// Minimum player count to test
         /// </summary>
-        private int minPlayers = 10;
+        private int minPlayers = 15;
         /// <summary>
         /// Maximum player count to test
         /// </summary>
-        private int maxPlayers = 10;
+        private int maxPlayers = 15;
         /// <summary>
         /// Number to increase player count by.
         /// </summary>
@@ -38,13 +37,12 @@ namespace GmailGameNarrator.Tests
                 for (int i = minPlayers; i < maxPlayers + 1; i = i + iterator)
                 {
                     List<Player> players = TestX.GenListOfPlayers(i);
-                    Game game = new Game(gameSystem.GetNextGameId(), players[0]);
-                    for (int j = 1; j < players.Count; j++)
-                    {
-                        game.AddPlayer(players[j]);
-                    }
+                    CreateTheGame(players[0]);
+                    Game game = gameSystem.GetGameByPlayer(players[0]);
+                    JoinPlayers(players, game);
                     Assert.IsTrue(game.Start());
-                    while (game.IsInProgress())
+                    Assert.IsTrue(game.GetLivingPlayers().Count == i);
+                    while (game.IsInProgress)
                     {
                         if (game.ActiveCycle == Game.Cycle.Day) DoDayVotes(game);
                         else DoNightActions(game);
@@ -53,18 +51,29 @@ namespace GmailGameNarrator.Tests
             }
         }
 
+        private void JoinPlayers(List<Player> players, Game game)
+        {
+            for(int i = 1; i < players.Count; i++)
+            {
+                SendAction(game, players[i], players[i], "join as");
+            }
+        }
+
+        private void CreateTheGame(Player player)
+        {
+            SendAction(null, player, player, "join as");
+        }
+
         private void DoDayVotes(Game game)
         {
             Player candidate = (Player)game.GetLivingPlayers().PickOne();
             foreach (Player p in game.GetLivingPlayers())
             {
-                Narrator.Action action = new Narrator.Action(GameSystem.ActionEnum.Vote, candidate.Name.ToLowerInvariant());
-                gameSystem.ProcessAction(game, p, action);
-                while (p.Vote == null && game.IsInProgress() && game.ActiveCycle == Game.Cycle.Day)
+                SendAction(game, p, candidate, "vote");
+                while (p.Vote == null && game.IsInProgress && game.ActiveCycle == Game.Cycle.Day)
                 {
                     Player newCandidate = (Player)game.GetLivingPlayers().PickOne();
-                    action = new Narrator.Action(GameSystem.ActionEnum.Vote, newCandidate.Name.ToLowerInvariant());
-                    gameSystem.ProcessAction(game, p, action);
+                    SendAction(game, p, newCandidate, "vote");
                 }
             }
         }
@@ -75,31 +84,32 @@ namespace GmailGameNarrator.Tests
             foreach (Player p in game.GetLivingPlayers())
             {
                 Player candidate = (Player)game.GetLivingPlayers().PickOne();
-                Narrator.Action action = null;
-                if (p.Team.Equals("Illuminati")) action = GenerateAction(game, p, sheepleCandidate);
-                else action = GenerateAction(game, p, candidate);
-                gameSystem.ProcessAction(game, p, action);
-                while (p.Actions.Count == 0)
+                if (p.Team.Equals("Illuminati")) SendAction(game, p, sheepleCandidate, p.Role.ActionText);
+                else SendAction(game, p, candidate, p.Role.ActionText);
+                while (p.Actions.Count == 0 && game.IsInProgress && game.ActiveCycle == Game.Cycle.Night)
                 {
-                    if (p.Team.Equals("Illuminati")) sheepleCandidate = (Player)LivingSheeple(game).PickOne();
-                    else candidate = (Player)game.GetLivingPlayers().PickOne();
-                    action = GenerateAction(game, p, candidate);
-                    gameSystem.ProcessAction(game, p, action);                    
+                    if (p.Team.Equals("Illuminati"))
+                    {
+                        sheepleCandidate = (Player)LivingSheeple(game).PickOne();
+                        SendAction(game, p, sheepleCandidate, p.Role.ActionText);
+                    }
+                    else
+                    {
+                        candidate = (Player)game.GetLivingPlayers().PickOne();
+                        SendAction(game, p, candidate, p.Role.ActionText);
+                    }                 
                 }
             }
         }
 
-        //TODO Change this to simulate a message sent by a player, so the parser can be tested
-        //BUG Broken right now because the parser strips out the ActionText and this does not
-        private Narrator.Action GenerateAction(Game game, Player p, Player candidate)
+        private void SendAction(Game game, Player p, Player candidate, string actionText)
         {
-            string param = p.Role.ActionText;
-            if (param.Length > 0)
-            {
-                param += " " + candidate.Name.ToLowerInvariant();
-            }
-            Narrator.Action action = new Narrator.Action(GameSystem.ActionEnum.Role, param);
-            return action;
+            SimpleMessage msg = new SimpleMessage();
+            msg.From = p.Address;
+            msg.Subject = "New Game";
+            if(game != null) msg.Subject = game.FullTitle;
+            msg.Body = actionText + " " + candidate.Name.ToLowerInvariant();
+            MessageParser.Instance.ParseMessage(msg);
         }
 
         private List<Player> LivingSheeple(Game game)

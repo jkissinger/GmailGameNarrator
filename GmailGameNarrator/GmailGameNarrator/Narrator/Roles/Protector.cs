@@ -27,7 +27,7 @@ namespace GmailGameNarrator.Narrator.Roles
         public override string DoNightActions(Player player, Game game)
         {
             string nomineeName = player.Actions[0].Parameter;
-            Player nominee = game.GetPlayerByName(nomineeName);
+            Player nominee = game.GetPlayer(nomineeName, "");
             nominee.IsProtected = true;
             Gmail.MessagePlayer(player, game, "You are protecting " + nominee.Name.b());
             game.Summary.AddEventLi(game.CycleTitle + " - " + player.Name.b() + " is protecting " + nominee.Name.b() + ".");
@@ -37,14 +37,14 @@ namespace GmailGameNarrator.Narrator.Roles
         private Player GetNominee(Player player, Game game)
         {
             string nomineeName = player.Actions[0].Parameter.GetTextAfter(ActionText);
-            Player newNominee = game.GetPlayerByName(nomineeName);
+            Player newNominee = game.GetPlayer(nomineeName, "");
             return newNominee;
         }
 
         public override string ValidateAction(Player player, Action action, Game game)
         {
             string nomineeName = action.Parameter;
-            Player nominee = game.GetPlayerByName(nomineeName);
+            Player nominee = game.GetPlayer(nomineeName, "");
             if (nominee == null) return nomineeName.b() + " is not a valid player in " + game.Title;
             else if (nominee.Equals(player)) return "You cannot protect yourself!";
             else if (!nominee.IsAlive) return "Choice rejected: " + nomineeName.b() + " is already dead!";

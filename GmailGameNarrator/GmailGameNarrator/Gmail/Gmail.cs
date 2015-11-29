@@ -220,13 +220,13 @@ namespace GmailGameNarrator
 
         public static void MessagePlayer(Player player, Game game, string body)
         {
+            string to = player.Address;
             string subject = "Unknown Game";
             if (game != null)
             {
                 subject = game.Subject;
+                game.Summary.AddEmail(to, subject, body);
             }
-            string to = player.Address;
-            game.Summary.AddEmail(to, subject, body);
             EnqueueMessage(to, subject, body);
         }
 

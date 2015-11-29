@@ -14,7 +14,7 @@ namespace GmailGameNarrator
         {
             delimiter = delimiter.ToLowerInvariant();
             string result = "";
-            int idx = str.IndexOf(delimiter);
+            int idx = str.ToLowerInvariant().IndexOf(delimiter);
             if (idx >= 0) result = str.Substring(idx + delimiter.Length, str.Length - delimiter.Length - idx);
             return result.Trim();
         }
