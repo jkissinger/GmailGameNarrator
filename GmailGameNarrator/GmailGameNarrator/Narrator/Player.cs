@@ -39,12 +39,21 @@ namespace GmailGameNarrator.Narrator
             IsAlive = true;
         }
 
-        public bool Kill(Role killerRole)
+        /// <summary>
+        /// Returns true if the attack succeeds, false otherwise.
+        /// </summary>
+        /// <param name="attackerRole">The role of the player making the attack</param>
+        /// <param name="isDeadly">Whether or not the attack will kill the player</param>
+        /// <returns>True if the attack succeeds, false otherwise.</returns>
+        public bool Attack(Role attackerRole, bool isDeadly)
         {
             if (!IsProtected)
             {
-                Role.KilledBy(killerRole);
-                IsAlive = false;
+                if (isDeadly)
+                {
+                    Role.KilledBy = attackerRole;
+                    IsAlive = false;
+                }
                 return true;
             }
             return false;

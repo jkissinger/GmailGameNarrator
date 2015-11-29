@@ -8,64 +8,44 @@ namespace GmailGameNarrator.Narrator.Roles
 {
     public abstract class Role
     {
-        public abstract string Name { get; }
-        public abstract Team Team { get; }
-        public abstract string Description { get; }
+        public string Name { get; protected set; }
+        public Team Team { get; protected set; }
         /// <summary>
-        /// The priority for night actions, between 0 and 4, first processed is 0, last 4.
+        /// The text that identifies this role's actions.  Default: the name of the role.
         /// </summary>
-        public virtual int NightActionPriority
-        {
-            get
-            {
-                return 4;
-            }
-        }
-        public virtual string ActionText
-        {
-            get
-            {
-                return Name;
-            }
-        }
+        public string ActionText { get; protected set; }
+        public string Description { get; protected set; }
+        public string Instructions { get; protected set; }
         /// <summary>
-        /// Maximum percentage of players with this role on a team.
+        /// The priority for night actions, 0 first, 4 last.  Default is 4.
+        /// <para />0=Preprocesing; 1=Protecters/Blockers; 2=Killers/Attackers; 3=Informational; 4=Postprocessing/No actions
         /// </summary>
-        public abstract int MaxPercentage { get; }
+        public int NightActionPriority { get; protected set; }
         /// <summary>
-        /// Maximum number of players with this role in a game.
+        /// Maximum percentage of players with this role on a team. Default 10.
         /// </summary>
-        public virtual int MaxPlayers
-        {
-            get
-            {
-                return 1000;
-            }
-        }
+        public int MaxPercentage { get; protected set; }
         /// <summary>
-        /// The priority for night actions, between 0 and 4, first processed is 0, last 4.
+        /// Likelihood of assigning this role, to make the more fun roles more likely to be picked.  Must be > 0, default 1.
         /// </summary>
-        public virtual bool IsKiller
-        {
-            get
-            {
-                return false;
-            }
-        }
-        public virtual bool IsInfectionImmune
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public int Prevalence { get; protected set; }
         /// <summary>
-        /// Likelihood of assigning this role, to make the more fun roles more likely to be picked.  Must be at least 1.
+        /// Whether or not this role can kill other players.  Default is false.
         /// </summary>
-        public abstract int Prevalence { get; }
-        public abstract string Instructions { get; }
+        public bool IsKiller { get; protected set; }
+        /// <summary>
+        /// Whether or not this role is immune to the zombie infection.  Default is false.
+        /// </summary>
+        public bool IsInfectionImmune { get; protected set; }
+        /// <summary>
+        /// Whether or not this role can be assigned at the beginning of the game.  Default is true.
+        /// </summary>
+        public bool Assignable { get; protected set; }
+        /// <summary>
+        /// The role that killed the player with this role.  Null if by day vote.
+        /// </summary>
+        public Role KilledBy { get; set; }
 
-        public virtual void KilledBy(Role role) { }
         public virtual string ValidateAction(Player player, Action action, Game game)
         {
             return "";

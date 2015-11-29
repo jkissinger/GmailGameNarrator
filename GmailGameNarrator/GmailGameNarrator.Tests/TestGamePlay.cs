@@ -59,12 +59,12 @@ namespace GmailGameNarrator.Tests
             foreach (Player p in game.GetLivingPlayers())
             {
                 Narrator.Action action = new Narrator.Action(GameSystem.ActionEnum.Vote, candidate.Name.ToLowerInvariant());
-                gameSystem.DoAction(game, p, action);
+                gameSystem.ProcessAction(game, p, action);
                 while (p.Vote == null && game.IsInProgress() && game.ActiveCycle == Game.Cycle.Day)
                 {
                     Player newCandidate = (Player)game.GetLivingPlayers().PickOne();
                     action = new Narrator.Action(GameSystem.ActionEnum.Vote, newCandidate.Name.ToLowerInvariant());
-                    gameSystem.DoAction(game, p, action);
+                    gameSystem.ProcessAction(game, p, action);
                 }
             }
         }
@@ -78,17 +78,19 @@ namespace GmailGameNarrator.Tests
                 Narrator.Action action = null;
                 if (p.Team.Equals("Illuminati")) action = GenerateAction(game, p, sheepleCandidate);
                 else action = GenerateAction(game, p, candidate);
-                gameSystem.DoAction(game, p, action);
+                gameSystem.ProcessAction(game, p, action);
                 while (p.Actions.Count == 0)
                 {
                     if (p.Team.Equals("Illuminati")) sheepleCandidate = (Player)LivingSheeple(game).PickOne();
                     else candidate = (Player)game.GetLivingPlayers().PickOne();
                     action = GenerateAction(game, p, candidate);
-                    gameSystem.DoAction(game, p, action);                    
+                    gameSystem.ProcessAction(game, p, action);                    
                 }
             }
         }
 
+        //TODO Change this to simulate a message sent by a player, so the parser can be tested
+        //BUG Broken right now because the parser strips out the ActionText and this does not
         private Narrator.Action GenerateAction(Game game, Player p, Player candidate)
         {
             string param = p.Role.ActionText;
@@ -114,7 +116,7 @@ namespace GmailGameNarrator.Tests
         {
             for (int i = 1; i < players.Count; i++)
             {
-                players[i].Kill(null);
+                players[i].Attack(null, true);
             }
         }
     }

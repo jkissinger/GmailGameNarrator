@@ -6,76 +6,19 @@ namespace GmailGameNarrator.Narrator.Roles
 {
     public class Antagonist : Role
     {
-        public override string Name
+        public Antagonist()
         {
-            get
-            {
-                return "Enlightened";
-            }
-        }
-
-        public override string Instructions
-        {
-            get
-            {
-                return "At night, vote for a player to cast out, like this \"" + ActionText.b() + " name".i() + "\" where " + "name".i() + " is the player you want to cast out.  You must have a consensus with your fellow " + Team + " or no one will be cast out!";
-            }
-        }
-
-        public override int MaxPercentage
-        {
-            get
-            {
-                return 40;
-            }
-        }
-
-        public override int Prevalence
-        {
-            get
-            {
-                return 1;
-            }
-        }
-
-        public override Team Team
-        {
-            get
-            {
-                return new AntagonistTeam();
-            }
-        }
-
-        public override int NightActionPriority
-        {
-            get
-            {
-                return 3;
-            }
-        }
-
-        public override bool IsKiller
-        {
-            get
-            {
-                return true;
-            }
-        }
-
-        public override string ActionText
-        {
-            get
-            {
-                return "vote";
-            }
-        }
-
-        public override string Description
-        {
-            get
-            {
-                return "You've had enough of the Sheeple eating your food and using your shelter.  With the other members of your team, you vote and then cast out one of the Sheeple from the enclave, knowing they will die quickly outside.";
-            }
+            Name = "Enlightened";
+            Team = new AntagonistTeam();
+            ActionText = "vote";
+            Description = "You've had enough of the Sheeple eating your food and using your shelter.  With the other members of your team, you vote and then cast out one of the Sheeple from the enclave, knowing they will die quickly outside.";
+            Instructions = "At night, vote for a player to cast out, like this \"" + ActionText.b() + " name".i() + "\" where " + "name".i() + " is the player you want to cast out.  You must have a consensus with your fellow " + Team + " or no one will be cast out!"; 
+            NightActionPriority = 2;
+            MaxPercentage = 40;
+            Prevalence = 1;
+            IsKiller = true;
+            IsInfectionImmune = false;
+            Assignable = true;
         }
 
         public override string DoNightActions(Player player, Game game)
@@ -96,7 +39,7 @@ namespace GmailGameNarrator.Narrator.Roles
                     return "";
                 }
             }
-            if (nominee.Kill(this))
+            if (nominee.Attack(this, true))
             {
                 string msg = game.CycleTitle + " - The " + Team.Name.b() + " cast out " + nominee.Name.b();
                 game.Summary.AddUniqueEvent(msg.li());
@@ -125,14 +68,15 @@ namespace GmailGameNarrator.Narrator.Roles
 
         private Player GetNominee(Player player, Game game)
         {
-            string nomineeName = player.Actions[0].Parameter.GetTextAfter(ActionText);
+            string nomineeName = player.Actions[0].Parameter;
             Player newNominee = game.GetPlayerByName(nomineeName);
             return newNominee;
         }
 
+        //TODO Move most of this functionality (all of it?) to role base class
         public override string ValidateAction(Player player, Action action, Game game)
         {
-            string nomineeName = action.Parameter.GetTextAfter(ActionText);
+            string nomineeName = action.Parameter;
             Player nominee = game.GetPlayerByName(nomineeName);
             if (nominee == null) return nomineeName.b() + " is not a valid player in " + game.Title;
             else if (nominee.Team.Equals(player.Team)) return "You cannot vote for " + nomineeName.b() + ".  They are on your team!";
@@ -140,6 +84,7 @@ namespace GmailGameNarrator.Narrator.Roles
             else
             {
                 Gmail.MessagePlayer(player, game, "Registered your " + player.Role.Name.b() + " vote for " + nomineeName.b() + ".");
+                //TODO Actually add the action here
             }
             return "";
         }

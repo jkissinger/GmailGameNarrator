@@ -102,7 +102,7 @@ namespace GmailGameNarrator.Narrator
             return player;
         }
 
-        public void DoAction(Game game, Player player, Action action)
+        public void ProcessAction(Game game, Player player, Action action)
         {
             if (action.Name == ActionEnum.JoinAs)
             {
@@ -124,13 +124,17 @@ namespace GmailGameNarrator.Narrator
 
         private void RoleAction(Player player, Action action, Game game)
         {
-            string result = player.AddNightAction(action, game);
-            if (!String.IsNullOrEmpty(result))
+            //As of now role actions only happen at night
+            if (game.ActiveCycle == Game.Cycle.Night)
             {
-                HandleBadAction(game, player, action, result);
-                return;
+                string result = player.AddNightAction(action, game);
+                if (!String.IsNullOrEmpty(result))
+                {
+                    HandleBadAction(game, player, action, result);
+                    return;
+                }
+                game.CheckEndOfCycle();
             }
-            game.CheckEndOfCycle();
         }
 
         private void Vote(Player player, Action action, Game game)

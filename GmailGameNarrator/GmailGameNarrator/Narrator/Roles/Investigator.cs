@@ -1,89 +1,36 @@
-﻿namespace GmailGameNarrator.Narrator.Roles
+﻿using GmailGameNarrator.Narrator.Teams;
+
+namespace GmailGameNarrator.Narrator.Roles
 {
     class Investigator : Sheeple
     {
-        public override string Name
+        public Investigator()
         {
-            get
-            {
-                return "Investigator";
-            }
-        }
-
-        public override int MaxPercentage
-        {
-            get
-            {
-                return 25;
-            }
-        }
-
-        public override int MaxPlayers
-        {
-            get
-            {
-                return 3;
-            }
-        }
-
-        public override int Prevalence
-        {
-            get
-            {
-                return 5;
-            }
-        }
-
-        public override int NightActionPriority
-        {
-            get
-            {
-                return 3;
-            }
-        }
-
-        public override string ActionText {
-            get
-            {
-                return "check";
-            }
-        }
-
-        public override string Description
-        {
-            get
-            {
-                return "Before the world came to an end, you worked as a private investigator.  Using your deductive skills, you analyze one person each night and are usually able to determine their allegiance.";
-            }
-        }
-
-        public override string Instructions
-        {
-            get
-            {
-                return "At night, send a message with \"" + Name.b() + " " + ActionText + " player\" in the body.  You will look into that player's affairs closely and by morning should have an idea of their allegiance.";
-            }
+            Name = "Investigator";
+            Team = new SheepleTeam();
+            ActionText = "Check";
+            Description = "Before the world came to an end, you worked as a private investigator.  Using your deductive skills, you analyze one person each night and are usually able to determine their allegiance.";
+            Instructions = "At night, send a message with \"" + ActionText + " player\" in the body.  You will look into that player's affairs closely and by morning should have an idea of their allegiance.";
+            NightActionPriority = 3;
+            MaxPercentage = 25;
+            Prevalence = 5;
+            IsKiller = false;
+            IsInfectionImmune = false;
+            Assignable = true;
         }
 
         public override string DoNightActions(Player player, Game game)
         {
-            string nomineeName = player.Actions[0].Parameter.GetTextAfter(ActionText + " ");
+            string nomineeName = player.Actions[0].Parameter;
             Player nominee = game.GetPlayerByName(nomineeName);
             Gmail.MessagePlayer(player, game, "You have investigated " + nominee.Name.b() + " and determined their allegiance is with the " + nominee.Team.b());
             game.Summary.AddEventLi(game.CycleTitle + " - " + player.Name.b() + " investigated " + nominee.Name.b() + ". And found out their allegiance is with the " + nominee.Team.b());
             return "";
         }
 
-        private Player GetNominee(Player player, Game game)
-        {
-            string nomineeName = player.Actions[0].Parameter.GetTextAfter(ActionText + " ");
-            Player newNominee = game.GetPlayerByName(nomineeName);
-            return newNominee;
-        }
-
         public override string ValidateAction(Player player, Action action, Game game)
         {
-            string nomineeName = action.Parameter.GetTextAfter(ActionText + " ");
+            string nomineeName = action.Parameter;
             Player nominee = game.GetPlayerByName(nomineeName);
             if (nominee == null) return nomineeName.b() + " is not a valid player in " + game.Title;
             else if (nominee.Equals(player)) return "You cannot " + ActionText + " yourself!";

@@ -9,6 +9,7 @@ namespace GmailGameNarrator.Narrator
     public class Action
     {
         public GameSystem.ActionEnum Name { get; }
+        //Make this a player, add other options?
         public string Parameter { get; }
 
         public Action(GameSystem.ActionEnum actionEnum, string parameter)

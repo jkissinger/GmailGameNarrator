@@ -237,7 +237,6 @@ namespace GmailGameNarrator
 
         private static void EnqueueMessage(string to, string subject, string body)
         {
-            //FEATURE Confirm that using a different subject, prevents gmail from trimming/quoting messages
             if (to.Contains(Program.UnitTestAddress)) return;
             SimpleMessage outgoing = new SimpleMessage();
             outgoing.To = to;

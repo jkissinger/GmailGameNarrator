@@ -68,7 +68,7 @@ namespace GmailGameNarrator.Narrator
         }
         /// <summary>
         /// Processes all actions in the message, calls <see cref="ParseActions(SimpleMessage)"/> to get a list of valid actions.
-        /// Passes each action to <see cref="GameSystem.DoAction(Game, Player, Action)"/>.
+        /// Passes each action to <see cref="GameSystem.ProcessAction(Game, Player, Action)"/>.
         /// </summary>
         /// <param name="message">The message to process</param>
         /// <param name="game">The game the player is playing in</param>
@@ -76,7 +76,7 @@ namespace GmailGameNarrator.Narrator
         private void DoActions(SimpleMessage message, Game game)
         {
             GameSystem gameSystem = GameSystem.Instance;
-            string address = message.FromAddress();
+            string address = message.From;
             Player player = gameSystem.GetPlayerByAddress(address);
             List<Action> actions = ParseActions(message, player, game);
 
@@ -88,7 +88,7 @@ namespace GmailGameNarrator.Narrator
             {
                 foreach (Action action in actions)
                 {
-                    gameSystem.DoAction(game, player, action);
+                    gameSystem.ProcessAction(game, player, action);
                 }
             }
         }

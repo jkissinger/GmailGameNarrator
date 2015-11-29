@@ -367,7 +367,7 @@ namespace GmailGameNarrator.Narrator
             int maxPercent = MathX.Percent(Players.Count, role.MaxPercentage);
             //1 player is okay for any role
             if (playerCount == 1) return false;
-            if (playerCount >= maxPercent || playerCount >= role.MaxPlayers)
+            if (playerCount >= maxPercent)
             {
                 return true;
             }
@@ -441,7 +441,7 @@ namespace GmailGameNarrator.Narrator
             else
             {
                 //Mark electee as dead then check if the game is over
-                electee.Kill(null);
+                electee.Attack(null, true);
                 voteMessage = String.Format(FlavorText.PlayerOutcastMessage, electee.Name.b());
             }
             Summary.AddEventLi("Voting Results: " + voteMessage);

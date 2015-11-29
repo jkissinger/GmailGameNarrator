@@ -37,26 +37,6 @@ namespace GmailGameNarrator
         /// </summary>
         public int SendAttempts { get; set; }
 
-        //TODO Look into removing FromAddress()
-        /// <summary>
-        /// This may be unncessary and could add complications, consider removing and just using From.
-        /// </summary>
-        /// <returns></returns>
-        public string FromAddress()
-        {
-            string address = From;
-            try
-            {
-                address = From.GetTextAfter("<");
-                address = address.Remove(address.Length - 1);
-            }
-            catch (Exception e)
-            {
-                log.Error("Malformed address: " + From, e);
-            }
-            return address.ToLowerInvariant();
-        }
-
         public List<string> BodyAsLines()
         {
             string body = Body.Replace('\r'.ToString(), string.Empty);

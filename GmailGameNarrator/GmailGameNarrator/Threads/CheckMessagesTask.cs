@@ -40,7 +40,13 @@ namespace GmailGameNarrator.Threads
                 foreach (SimpleMessage msg in messages)
                 {
                     log.Debug("Message found: Subject: " + msg.Subject + " From: " + msg.From);
-                    MessageParser.Instance.ParseMessage(msg);
+                    try {
+                        MessageParser.Instance.ParseMessage(msg);
+                    } catch (Exception e)
+                    {
+                        log.Error("Error parsing email.", e);
+                        Gmail.MessagePerson(msg.From, "Error", "There was an error processing your last email, restart the game.");
+                    }
                     Gmail.MarkMessageRead(msg.Message.Id);
                     log.Info("Message processed: Subject: " + msg.Subject + " From: " + msg.From);
                 }

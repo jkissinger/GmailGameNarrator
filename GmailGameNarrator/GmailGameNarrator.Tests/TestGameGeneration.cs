@@ -27,7 +27,6 @@ namespace GmailGameNarrator.Tests
                     }
                     List<Type> roleTypes = gameSystem.GetRoleTypes();
                     game.Start();
-                    Assert.IsTrue(ValidateRoleMaxCount(game));
                     Assert.IsTrue(ValidateRoleMaxPercentage(game));
                     Assert.IsTrue(ValidateTeamMinPercent(game));
                 }
@@ -66,28 +65,6 @@ namespace GmailGameNarrator.Tests
                 int teamMembersCount = game.GetCountOfPlayersOnTeam(t);
                 int minMembers = MathX.Percent(game.Players.Count, t.MinPercentComposition);
                 if (teamMembersCount < minMembers) return false;
-            }
-            return true;
-        }
-
-        /// <summary>
-        /// Validates no more than the maximum count is made of the given role.  Even if the maximum is less than or = 1, 1 player of any role is allowed.
-        /// </summary>
-        /// <param name="game"></param>
-        /// <returns></returns>
-        private bool ValidateRoleMaxCount(Game game)
-        {
-            foreach (Role r in game.GetPlayingRoles())
-            {
-                int count = 0;
-                foreach (Player p in game.Players)
-                {
-                    if (p.Role.Equals(r)) count++;
-                }
-                if (count > r.MaxPlayers && count > 1)
-                {
-                    return false;
-                }
             }
             return true;
         }
