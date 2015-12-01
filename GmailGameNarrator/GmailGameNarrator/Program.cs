@@ -2,6 +2,7 @@
 using GmailGameNarrator.Threads;
 using System;
 using System.IO;
+using System.Threading;
 
 [assembly: log4net.Config.XmlConfigurator(Watch = true)]
 
@@ -63,7 +64,10 @@ namespace GmailGameNarrator
             //GmailRequestBackoff BackoffThread = new GmailRequestBackoff();
             //TaskState BackoffState = BackoffThread.Init();
 
-            while (running) { };
+            while (running)
+            {
+                Thread.Sleep(10000);
+            };
 
             CheckMessagesState.TimerCanceled = true;
             SendMessagesState.TimerCanceled = true;

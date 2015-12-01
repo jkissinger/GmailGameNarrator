@@ -83,7 +83,7 @@ namespace GmailGameNarrator.Narrator
             List<Action> actions = ParseActions(message, player, game);
 
             if (game == null) gameSystem.NewGame(message, actions);
-            else if (player == null) gameSystem.JoinGame(address, actions, game);
+            else if (player == null) gameSystem.ValidateJoinAction(address, actions, game);
             else
             {
                 foreach (Action action in actions)
@@ -127,7 +127,7 @@ namespace GmailGameNarrator.Narrator
                 if (line.StartsWith(eWithSpaces.ToLowerInvariant()))
                 {
                     GameSystem.ActionEnum actionEnum = (GameSystem.ActionEnum)Enum.Parse(typeof(GameSystem.ActionEnum), e.ToString());
-                    return StringToAction(line, actionEnum, eWithSpaces.ToLowerInvariant());
+                    return StringToAction(line, actionEnum, eWithSpaces.ToLowerInvariant(), null);
                 }
             }
             return null;
@@ -144,11 +144,11 @@ namespace GmailGameNarrator.Narrator
             string actionText = player.Role.ActionText.ToLowerInvariant();
             if (line.StartsWith(actionText) && game.ActiveCycle == Game.Cycle.Night)
             {
-                return StringToAction(line, GameSystem.ActionEnum.Role, actionText);
+                return StringToAction(line, GameSystem.ActionEnum.Role, actionText, game);
             }
             if (line.StartsWith("vote") && player.IsAlive && game.ActiveCycle == Game.Cycle.Day)
             {
-                return StringToAction(line, GameSystem.ActionEnum.Vote, "vote");
+                return StringToAction(line, GameSystem.ActionEnum.Vote, "vote", game);
             }
             return null;
         }
@@ -160,10 +160,14 @@ namespace GmailGameNarrator.Narrator
         /// <param name="actionType"></param>
         /// <param name="actionText"></param>
         /// <returns></returns>
-        public Action StringToAction(string line, GameSystem.ActionEnum actionType, string actionText)
+        public Action StringToAction(string line, GameSystem.ActionEnum actionType, string actionText, Game game)
         {
-            string parameter = line.GetTextAfter(actionText).Trim();
-            Action action = new Action(actionType, parameter);
+            string param = line.GetTextAfter(actionText).Trim();
+            Player target = null;
+            if (game != null) target = game.GetPlayer(param, "");
+            Action action = new Action(actionType);
+            if (target == null) action.Text = param;
+            else action.Target = target;
             return action;
         }
 

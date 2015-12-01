@@ -10,12 +10,12 @@ namespace GmailGameNarrator.Narrator.Roles
             Name = "Wannabe";
             Team = new SoloTeam();
             ActionText = Name;
-            Description ="The Illuminati said you could be one of them if you got the rest of the town to vote to cast you out.  If that happens, you win.";
+            Description = "The Illuminati said you could be one of them if you got the rest of the town to vote to cast you out.  If that happens, you win.";
             Instructions = "At night, send a message with " + Name.b() + " as the body.   Nothing will happen, but this is to ensure everyone has a night action.";
             NightActionPriority = 4;
             MaxPercentage = 20;
             Prevalence = 10;
-            IsKiller = false;
+            IsAttacker = false;
             IsInfectionImmune = false;
             Assignable = true;
         }
@@ -35,5 +35,7 @@ namespace GmailGameNarrator.Narrator.Roles
             }
             return false;
         }
+
+        public override void PerformNightActions(Player player, Game game) { }
     }
 }

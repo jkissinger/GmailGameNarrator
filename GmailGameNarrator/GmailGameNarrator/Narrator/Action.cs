@@ -8,19 +8,19 @@ namespace GmailGameNarrator.Narrator
 {
     public class Action
     {
-        public GameSystem.ActionEnum Name { get; }
+        public GameSystem.ActionEnum Type { get; }
         //Make this a player, add other options?
-        public string Parameter { get; }
+        public Player Target { get; set; }
+        public string Text { get; set; }
 
-        public Action(GameSystem.ActionEnum actionEnum, string parameter)
+        public Action(GameSystem.ActionEnum actionEnum)
         {
-            Name = actionEnum;
-            Parameter = parameter;
+            Type = actionEnum;
         }
 
         public override string ToString()
         {
-            return Name.ToString() + " " + Parameter;
+            return Type.ToString() + " " + Target.Name;
         }
     }
 }

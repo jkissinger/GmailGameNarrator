@@ -30,9 +30,9 @@ namespace GmailGameNarrator.Narrator.Roles
         /// </summary>
         public int Prevalence { get; protected set; }
         /// <summary>
-        /// Whether or not this role can kill other players.  Default is false.
+        /// Whether or not this role can attack other players.  Default is false.
         /// </summary>
-        public bool IsKiller { get; protected set; }
+        public bool IsAttacker { get; protected set; }
         /// <summary>
         /// Whether or not this role is immune to the zombie infection.  Default is false.
         /// </summary>
@@ -46,11 +46,6 @@ namespace GmailGameNarrator.Narrator.Roles
         /// </summary>
         public Role KilledBy { get; set; }
 
-        public virtual string ValidateAction(Player player, Action action, Game game)
-        {
-            return "";
-        }
-
         /// <summary>
         /// Determines if this player has met their win conditions.  By default checks team win conditions, but can be overriden if necessary.
         /// </summary>
@@ -63,15 +58,33 @@ namespace GmailGameNarrator.Narrator.Roles
         }
 
         /// <summary>
-        /// Processes any night actions for given player in given game.  By default does nothing.
+        /// Player performing the action, action being performed, and the game this is all taking place in.
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="action"></param>
+        /// <param name="game"></param>
+        /// <returns></returns>
+        public virtual string AddAction(Player player, Action action, Game game)
+        {
+            Player nominee = action.Target;
+            if (nominee == null) return action.Text.b() + " is not a valid player in " + game.Title;
+            else if (nominee.Equals(player)) return "You cannot " + ActionText + " yourself!";
+            else if (!nominee.IsAlive) return "Choice rejected: " + nominee.Name.b() + " is already dead!";
+            else
+            {
+                player.AddAction(action);
+                Gmail.MessagePlayer(player, game, "Registered your night action to " + ActionText + " " + nominee.Name.b() + ".");
+            }
+            return "";
+        }
+
+        /// <summary>
+        /// Processes any night actions for given player in given game.
         /// </summary>
         /// <param name="player">The player performing the action</param>
         /// <param name="game">The game player is playing</param>
         /// <returns></returns>
-        public virtual string DoNightActions(Player player, Game game)
-        {
-            return "";
-        }
+        public abstract void PerformNightActions(Player player, Game game);
 
         /// <summary>
         /// Processes any day actions for given player in given game.  By default does nothing.

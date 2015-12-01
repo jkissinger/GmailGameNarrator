@@ -15,11 +15,11 @@ namespace GmailGameNarrator.Tests
         /// <summary>
         /// Number of tests to run
         /// </summary>
-        private int numTests = 1;
+        private int numTests = 4;
         /// <summary>
         /// Minimum player count to test
         /// </summary>
-        private int minPlayers = 15;
+        private int minPlayers = 5;
         /// <summary>
         /// Maximum player count to test
         /// </summary>
@@ -27,7 +27,7 @@ namespace GmailGameNarrator.Tests
         /// <summary>
         /// Number to increase player count by.
         /// </summary>
-        private int iterator = 1;
+        private int iterator = 5;
 
         [TestMethod]
         public void GamePlayTest()
@@ -70,7 +70,7 @@ namespace GmailGameNarrator.Tests
             foreach (Player p in game.GetLivingPlayers())
             {
                 SendAction(game, p, candidate, "vote");
-                while (p.Vote == null && game.IsInProgress && game.ActiveCycle == Game.Cycle.Day)
+                while (p.MyAction == null && game.IsInProgress && game.ActiveCycle == Game.Cycle.Day)
                 {
                     Player newCandidate = (Player)game.GetLivingPlayers().PickOne();
                     SendAction(game, p, newCandidate, "vote");
@@ -86,7 +86,7 @@ namespace GmailGameNarrator.Tests
                 Player candidate = (Player)game.GetLivingPlayers().PickOne();
                 if (p.Team.Equals("Illuminati")) SendAction(game, p, sheepleCandidate, p.Role.ActionText);
                 else SendAction(game, p, candidate, p.Role.ActionText);
-                while (p.Actions.Count == 0 && game.IsInProgress && game.ActiveCycle == Game.Cycle.Night)
+                while (p.MyAction == null && game.IsInProgress && game.ActiveCycle == Game.Cycle.Night)
                 {
                     if (p.Team.Equals("Illuminati"))
                     {
@@ -126,7 +126,7 @@ namespace GmailGameNarrator.Tests
         {
             for (int i = 1; i < players.Count; i++)
             {
-                players[i].Attack(null, true);
+                players[i].Attack(null, true, true);
             }
         }
     }

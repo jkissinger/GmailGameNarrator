@@ -91,19 +91,19 @@ namespace GmailGameNarrator.Narrator
 
         public void PerformAction(Game game, Player player, Action action)
         {
-            if (action.Name == ActionEnum.JoinAs)
+            if (action.Type == ActionEnum.JoinAs)
             {
                 //If JoinAs gets hit here, it's only because the player is already playing in a different game
                 Game g = GetGameByPlayer(player);
-                if(g!=null)HandleBadAction(g, player, action, "Failed to join " + game.Title + ". You are already playing in " + g.Title + ".");
+                if (g != null) HandleBadAction(g, player, action, "Failed to join " + game.Title + ". You are already playing in " + g.Title + ".");
             }
-            else if (action.Name == ActionEnum.Status) Status(player, action, game);
-            else if (action.Name == ActionEnum.Cancel) Cancel(player, action, game);
-            else if (action.Name == ActionEnum.Start) Start(player, action, game);
-            else if (action.Name == ActionEnum.Quit) Quit(player, action, game);
-            else if (action.Name == ActionEnum.Vote && game.ActiveCycle == Game.Cycle.Day) Vote(player, action, game);
-            else if (action.Name == ActionEnum.Help) Help(player, action, game);
-            else if (action.Name == ActionEnum.Role) RoleAction(player, action, game);
+            else if (action.Type == ActionEnum.Status) Status(player, action, game);
+            else if (action.Type == ActionEnum.Cancel) Cancel(player, action, game);
+            else if (action.Type == ActionEnum.Start) Start(player, action, game);
+            else if (action.Type == ActionEnum.Quit) Quit(player, action, game);
+            else if (action.Type == ActionEnum.Vote && game.ActiveCycle == Game.Cycle.Day) Vote(player, action, game);
+            else if (action.Type == ActionEnum.Help) Help(player, action, game);
+            else if (action.Type == ActionEnum.Role) RoleAction(player, action, game);
             //TODO Implement Kick & Ban
             //if (action.Name == ActionEnum.Kick) Kick(player, action, game);
             //if (action.Name == ActionEnum.Ban) Ban(player, action, game);
@@ -114,7 +114,7 @@ namespace GmailGameNarrator.Narrator
             //As of now role actions only happen at night
             if (game.ActiveCycle == Game.Cycle.Night)
             {
-                string result = player.AddNightAction(action, game);
+                string result = player.Role.AddAction(player, action, game);
                 if (!String.IsNullOrEmpty(result))
                 {
                     HandleBadAction(game, player, action, result);
@@ -126,17 +126,17 @@ namespace GmailGameNarrator.Narrator
 
         private void Vote(Player player, Action action, Game game)
         {
-            Player nominee = game.GetPlayer(action.Parameter, "");
+            Player nominee = action.Target;
             if (nominee == null)
             {
-                if (action.Parameter.Equals("no one") || action.Parameter.Equals("nobody") || action.Parameter.Equals("noone"))
+                if (action.Text.Equals("no one") || action.Text.Equals("nobody") || action.Text.Equals("noone"))
                 {
                     Player NoOne = new Player("No one", "nobody");
                     nominee = NoOne;
                 }
                 else
                 {
-                    HandleBadAction(game, player, action, "You voted for an invalid player <b>" + action.Parameter + "</b> see the player's names below." + FlavorText.Divider + game.Status());
+                    HandleBadAction(game, player, action, "You voted for an invalid player <b>" + action.Target + "</b> see the player's names below." + FlavorText.Divider + game.Status());
                     return;
                 }
             }
@@ -150,8 +150,9 @@ namespace GmailGameNarrator.Narrator
             }
             else
             {
-                Vote vote = new Vote(action, nominee);
-                player.Vote = vote;
+                Action vote = new Action(ActionEnum.Vote);
+                vote.Target = nominee;
+                player.AddAction(vote);
                 Gmail.MessagePlayer(player, game, "Registered your vote for <b>" + nominee.Name + "</b>.");
                 game.CheckEndOfCycle();
             }
@@ -212,55 +213,61 @@ namespace GmailGameNarrator.Narrator
             }
         }
 
-        public void JoinGame(string address, List<Action> actions, Game game)
+        /// <summary>
+        /// The given player isn't playing in any games, but they did reference a valid game id.  See if they want to join it.
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="actions"></param>
+        /// <param name="game"></param>
+        public void ValidateJoinAction(string address, List<Action> actions, Game game)
         {
             foreach (Action action in actions)
             {
-                if (action.Name == ActionEnum.JoinAs)
+                if (action.Type == ActionEnum.JoinAs)
                 {
-                    Player player = new Player(action.Parameter.ToTitleCase(), address);
+                    Player player = new Player(action.Text.ToTitleCase(), address);
                     if (String.IsNullOrEmpty(player.Name))
                     {
-                        if (game == null)
-                        {
-                            HandleBadAction(null, player, action, "You didn't specify the name you wished to join the game as. To do this send a new email with \"Join as <i>name</i>\" where <i>name</i> is your name.");
-                        }
-                        else
-                        {
-                            HandleBadAction(game, player, action, "You didn't specify the name you wished to join the game as. To do this reply to this message with \"Join as <i>name</i>\" where <i>name</i> is your name.");
-                        }
+                        HandleBadAction(game, player, action, "You didn't specify the name you wished to join the game as. To do this reply to this message with \"Join as <i>name</i>\" where <i>name</i> is your name.");
                         return;
                     }
-                    JoinGame(player, action, game);
+                    else if (game.IsInProgress)
+                    {
+                        HandleBadAction(game, player, action, "You cannot join " + game + " because it is in progress.");
+                    }
+                    else if (game.GetPlayer(player.Name, "") != null)
+                    {
+                        HandleBadAction(game, player, action, "Someone else is already using " + player.Name.b() + " as their name, please choose a different name.");
+                    }
+                    else
+                    {
+                        ProcessJoinAction(player, action, game);
+                    }
                     return;
                 }
             }
-            //TODO rewrite this error handling
-            Player p = new Player("", address);
-            Action a = new Action(ActionEnum.JoinAs, "");
-            HandleBadAction(null, p, a, "You aren't playing any games, the only action you may take is joining a game or creating a game. To start a new game reply to this message with \"Join as <i>name</i>\" where <i>name</i> is your name.");
+            //None of the actions were join actions, and they aren't playing in any games so...
+            string msg = "You aren't playing any games, the only action you may take is joining a game or creating a game. To start a new game reply to this message with \"Join as <i>name</i>\" where <i>name</i> is your name.";
+            log.Warn("Unknown malformed action from " + address);
+            Gmail.MessagePerson(address, game.Subject, msg);
+
         }
 
-        private void JoinGame(Player player, Action action, Game game)
+        /// <summary>
+        /// Join game request is valid, process it.
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="action"></param>
+        /// <param name="game"></param>
+        private void ProcessJoinAction(Player player, Action action, Game game)
         {
-            if (game.IsInProgress)
-            {
-                HandleBadAction(game, player, action, "You cannot join " + game + " because it is in progress.");
-            }
-            else if (game.GetPlayer(player.Name, "") != null)
-            {
-                HandleBadAction(game, player, action, "Someone else is already using " + player.Name.b() + " as their name, please choose a different name.");
-            }
-            else
-            {
-                game.AddPlayer(player);
-                Gmail.MessagePlayer(player, game, "Successfully added you to the game, <b>" + game.Overlord + "</b> is the Overlord.<br />"
-                    + "I will notify you when the game has started."
-                    + "<br /><br />"
-                    + game.Help(player));
-                Gmail.MessagePlayer(game.Overlord, game, "<b>" + player + "</b> has joined " + game.Title);
-                gameLog.Info("Added player " + player + " to " + game);
-            }
+            game.AddPlayer(player);
+            Gmail.MessagePlayer(player, game, "Successfully added you to the game, <b>" + game.Overlord + "</b> is the Overlord.<br />"
+                + "I will notify you when the game has started."
+                + "<br /><br />"
+                + game.Help(player));
+            Gmail.MessagePlayer(game.Overlord, game, "<b>" + player + "</b> has joined " + game.Title);
+            gameLog.Info("Added player " + player + " to " + game);
         }
 
         public void NewGame(SimpleMessage message, List<Action> actions)
@@ -268,13 +275,13 @@ namespace GmailGameNarrator.Narrator
             string address = message.From;
             string name = "";
             Action joinAction = null;
-            foreach(Action action in actions)
+            foreach (Action action in actions)
             {
-                if (action.Name == ActionEnum.JoinAs) joinAction = action;
+                if (action.Type == ActionEnum.JoinAs) joinAction = action;
             }
-            name = joinAction.Parameter;
+            name = joinAction.Text;
             Player player = new Player(name, address);
-            if(String.IsNullOrEmpty(name))
+            if (String.IsNullOrEmpty(name))
             {
                 HandleBadAction(null, player, joinAction, "You didn't specify the name you wished to join the game as. To do this send a new email with \"Join as <i>name</i>\" where <i>name</i> is your name.");
                 return;
@@ -311,7 +318,7 @@ namespace GmailGameNarrator.Narrator
 
         private void HandleBadAction(Game game, Player player, Action action, string error)
         {
-            log.Warn("Malformed action " + action.Name + " with param " + action.Parameter + " from " + player.Address);
+            log.Warn("Malformed action " + action.Type + " with target " + action.Target + " and text " + action.Text + " from " + player.Address);
             Gmail.MessagePlayer(player, game, error);
         }
     }

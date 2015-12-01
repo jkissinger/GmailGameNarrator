@@ -10,6 +10,7 @@ namespace GmailGameNarrator.Narrator.Roles
     class ZombieMaster : Role
     {
         public static int ChanceToTurn = 75;
+        private List<Player> TheBitten = new List<Player>();
 
         public ZombieMaster()
         {
@@ -21,58 +22,71 @@ namespace GmailGameNarrator.Narrator.Roles
             NightActionPriority = 3;
             MaxPercentage = 20;
             Prevalence = 10;
-            IsKiller = true;
+            IsAttacker = true;
             IsInfectionImmune = true;
         }
 
-        /// <summary>
-        /// Returns true if this player is the only remaining player alive.
-        /// </summary>
-        /// <param name="player"></param>
-        /// <param name="game"></param>
-        /// <returns></returns>
-        public override bool HaveIWon(Player player, Game game)
+        public override void PerformNightActions(Player player, Game game)
         {
-            //TODO Could result in a stalemate between zombie masters, do they "band together"?
-            if (game.GetLivingPlayers().Count == 1 && player.IsAlive) return true;
-            return false;
+            if (NightActionPriority == 0)
+            {
+                CheckForZombieBites(game);
+            }
+            else if (player.IsAlive)
+            {
+                Player nominee = player.MyAction.Target;
+                string message = "";
+                string result = "";
+                if (nominee.Attack(this, false, false))
+                {
+                    TheBitten.Add(nominee);
+                    message += "You bit " + nominee.Name.b() + "! There is a " + ChanceToTurn + "% chance they will turn into a zombie tomorrow night!";
+                    result = " bit " + nominee.Name.b() + ".";
+                }
+                else
+                {
+                    message += "You were unable to bite " + nominee.Name.b() + " because someone was protecting them!";
+                    result = " tried to bite " + nominee.Name.b() + " But they were protected.";
+                }
+                game.Summary.AddEventLi(game.CycleTitle + " - " + player.Name.b() + result);
+                Gmail.MessagePlayer(player, game, message);
+                NightActionPriority = 0;
+            }
         }
 
-        public override string DoNightActions(Player player, Game game)
+        public void CheckForZombieBites(Game game)
         {
-            string victimName = player.Actions[0].Parameter;
-            Player nominee = game.GetPlayer(victimName, "");
-            string message = "";
-            string result = "";
-            if (nominee.Attack(this, false))
+            List<Player> victims = new List<Player>();
+            victims.AddRange(TheBitten);
+            TheBitten.Clear();
+            foreach (Player p in victims)
             {
-
-                nominee.BittenRound = game.RoundCounter;
-                message += "You bit " + nominee.Name.b() + "! There is a " + ChanceToTurn + "% chance they will turn into a zombie tomorrow night!";
-                result = " bit " + nominee.Name.b() + ".";
+                Player bitten = null;
+                if (p.Role.IsInfectionImmune || !p.IsAlive) return;
+                string message = "";
+                if (MathX.PercentChance(ZombieMaster.ChanceToTurn))
+                {
+                    p.Attack(this, true, true);
+                    message += "You succumbed to the zombie bite last night, and have turned into a zombie! You are now dead.";
+                    string msg = "Just as the sun set completely, " + Name.b() + " turned into a zombie!  You quickly banded together and put them out of their misery.  But one of you may have been bitten in the process...";
+                    game.NightEvents.Add(msg);
+                    if (MathX.PercentChance(ZombieMaster.ChanceToTurn))
+                    {
+                        //this bypasses protection because it technically happens before night starts
+                        bitten = (Player)game.GetLivingPlayers().PickOne();
+                        message += " After turning into a zombie, you bit " + bitten.Name.b() + ".";
+                        Gmail.MessagePlayer(bitten, game, "While putting " + Name.b() + " down, you were bitten! Hopefully you won't turn tomorrow night...");
+                    }
+                }
+                else
+                {
+                    message += "You shrugged off the effects of the zombie bite and are ready to perform your normal night actions.";
+                }
+                game.Summary.AddEventLi(game.CycleTitle + " - " + Name.b() + ": " + message);
+                Gmail.MessagePlayer(p, game, message);
+                if (bitten != null) TheBitten.Add(bitten);
             }
-            else
-            {
-                message += "You were unable to bite " + nominee.Name.b() + " because someone was protecting them!";
-                result = " tried to bite " + nominee.Name.b() + " But they were protected.";
-            }
-            game.Summary.AddEventLi(game.CycleTitle + " - " + player.Name.b() + result);
-            Gmail.MessagePlayer(player, game, message);
-            return "";
-        }
-
-        public override string ValidateAction(Player player, Action action, Game game)
-        {
-            string nomineeName = action.Parameter;
-            Player nominee = game.GetPlayer(nomineeName, "");
-            if (nominee == null) return nomineeName.b() + " is not a valid player in " + game.Title;
-            else if (nominee.Equals(player)) return "You cannot bite yourself!";
-            else if (!nominee.IsAlive) return "Cannot bite " + nomineeName.b() + ", they are already dead!";
-            else
-            {
-                Gmail.MessagePlayer(player, game, "Registered your " + player.Role.Name.b() + " action to " + ActionText.b() + " " + nomineeName.i() + ".");
-            }
-            return "";
+            NightActionPriority = 3;
         }
     }
 }

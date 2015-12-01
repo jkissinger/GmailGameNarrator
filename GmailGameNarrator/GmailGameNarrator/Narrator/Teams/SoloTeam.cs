@@ -8,28 +8,19 @@ namespace GmailGameNarrator.Narrator.Teams
 {
     public class SoloTeam : Team
     {
-        public override bool KnowsTeammates
+        public override bool HaveIWon(Player player, Game game)
         {
-            get
-            {
-                return false;
-            }
+            //I'm the sole survivor, I win
+            if (player.IsAlive && game.GetLivingPlayers().Count == 1) return true;
+            return false;
         }
 
-        public override int MinPercentComposition
+        public SoloTeam()
         {
-            get
-            {
-                return 0;
-            }
-        }
-
-        public override string Name
-        {
-            get
-            {
-                return "Solo";
-            }
+            Name = "Solo";
+            KnowsTeammates = false;
+            MinPercentage = 0;
+            IsMajor = false;
         }
     }
 }

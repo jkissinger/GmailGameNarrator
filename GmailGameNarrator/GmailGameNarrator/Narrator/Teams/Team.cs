@@ -2,32 +2,27 @@
 {
     public abstract class Team
     {
-        public abstract string Name { get; }
-        public abstract bool KnowsTeammates { get; }
+        public string Name { get; protected set; }
+        public bool KnowsTeammates { get; protected set; }
         /// <summary>
         /// The minimum percentage of players that must be on the team to be effective.
         /// </summary>
-        public abstract int MinPercentComposition { get; }
-        public virtual bool IsMajor
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public int MinPercentage { get; protected set; }
+        public bool IsMajor { get; protected set; }
 
-        public virtual bool HaveIWon(Player player, Game game)
-        {
-            foreach (Player p in game.Players)
-            {
-                if (p.IsAlive && !p.Team.Equals(player.Team)) return false;
-            }
-            return true;
-        }
-
+        public abstract bool HaveIWon(Player player, Game game);
         public virtual string ValidateAction(Player player, Action action, Game game)
         {
             return "";
+        }
+
+        public Team()
+        {
+            //Name = 
+            KnowsTeammates = false;
+            MinPercentage = 1;
+            IsMajor = false;
+
         }
 
         //==========================

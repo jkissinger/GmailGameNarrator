@@ -15,9 +15,23 @@ namespace GmailGameNarrator.Narrator.Roles
             NightActionPriority = 4;
             MaxPercentage = 80;
             Prevalence = 1;
-            IsKiller = false;
+            IsAttacker = false;
             IsInfectionImmune = false;
             Assignable = true;
         }
+
+        /// <summary>
+        /// Any action is valid for Sheeple.
+        /// </summary>
+        public override string AddAction(Player player, Action action, Game game)
+        {
+            player.AddAction(action);
+            return "";
+        }
+
+        /// <summary>
+        /// Sheeple do nothing at night.
+        /// </summary>
+        public override void PerformNightActions(Player player, Game game) { }
     }
 }

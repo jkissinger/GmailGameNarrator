@@ -56,6 +56,7 @@ namespace GmailGameNarrator.Narrator
         }
         private bool AnonymousVoting = false;
         public Summary Summary;
+        public List<string> NightEvents = new List<string>();
 
         public Game(int id, Player overlord)
         {
@@ -117,8 +118,8 @@ namespace GmailGameNarrator.Narrator
         {
             foreach (Player p in Players)
             {
-                if (!String.IsNullOrEmpty(name) && p.Name.ToLowerInvariant().Equals(name)) return p;
-                if (!String.IsNullOrEmpty(address) && p.Address.ToLowerInvariant().Equals(address)) return p;
+                if (!String.IsNullOrEmpty(name) && p.Name.ToLowerInvariant().Equals(name.ToLowerInvariant())) return p;
+                if (!String.IsNullOrEmpty(address) && p.Address.ToLowerInvariant().Equals(address.ToLowerInvariant())) return p;
             }
 
             return null;
@@ -266,14 +267,14 @@ namespace GmailGameNarrator.Narrator
             {
                 if (team.IsMajor)
                 {
-                    int min = MathX.Percent(Players.Count, team.MinPercentComposition);
+                    int min = MathX.Percent(Players.Count, team.MinPercentage);
                     if (GetCountOfPlayersOnTeam(team) < min) return team;
                 }
             }
             //Check other teams
             foreach (Team team in GetTeamsPlayingUnique())
             {
-                int min = MathX.Percent(Players.Count, team.MinPercentComposition);
+                int min = MathX.Percent(Players.Count, team.MinPercentage);
                 if (GetCountOfPlayersOnTeam(team) < min) return team;
             }
             return null;
@@ -387,10 +388,9 @@ namespace GmailGameNarrator.Narrator
 
         public void CheckEndOfCycle()
         {
-            foreach (Player p in Players)
+            foreach (Player p in GetLivingPlayers())
             {
-                if (ActiveCycle == Cycle.Day && p.IsAlive && p.Vote == null) return;
-                if (ActiveCycle == Cycle.Night && p.IsAlive && p.Actions.Count == 0) return;
+                if (p.MyAction == null) return;
             }
             if (ActiveCycle == Cycle.Day) EndOfDay();
             else EndOfNight();
@@ -405,8 +405,8 @@ namespace GmailGameNarrator.Narrator
             {
                 if (p.IsAlive)
                 {
-                    candidates.Add(p.Vote.Candidate);
-                    votingResults.Add(p.Name.b() + " voted for: " + p.Vote.Candidate.Name.i());
+                    candidates.Add(p.MyAction.Target);
+                    votingResults.Add(p.Name.b() + " voted for: " + p.MyAction.Target.Name.i());
                 }
             }
             Dictionary<Player, int> candidateCounts = candidates.GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
@@ -433,7 +433,7 @@ namespace GmailGameNarrator.Narrator
             else
             {
                 //Mark electee as dead then check if the game is over
-                electee.Attack(null, true);
+                electee.Attack(null, true, false);
                 voteMessage = String.Format(FlavorText.PlayerOutcastMessage, electee.Name.b());
             }
             Summary.AddEventLi("Voting Results: " + voteMessage);
@@ -463,32 +463,23 @@ namespace GmailGameNarrator.Narrator
 
         private void EndOfNight()
         {
-            List<string> nightSummary = new List<string>();
-            
-            //Check for zombie bites; happens first thing at night
-            foreach (Player p in GetLivingPlayers())
-            {
-                string msg = p.CheckForZombieBite(this);
-                if (!String.IsNullOrEmpty(msg) && !nightSummary.Contains(msg)) nightSummary.Add(msg);
-            }
-            
-            //This is very inefficient, but even with a game of 20 players, it will only take 100 iterations, which is trivial
             for (int i = 0; i < 5; i++)
             {
                 foreach (Player p in GetLivingPlayers())
                 {
                     if (p.Role.NightActionPriority == i)
                     {
-                        string msg = p.DoActions(this);
-                        if (!String.IsNullOrEmpty(msg) && !nightSummary.Contains(msg)) nightSummary.Add(msg);
+                        string msg = p.PerformActions(this);
+                        if (!String.IsNullOrEmpty(msg) && !NightEvents.Contains(msg)) NightEvents.Add(msg);
                     }
                 }
             }
 
             string message = "The night has come to a close, ";
-            if (nightSummary.Count > 0) message += "this is what happened:<br />" + nightSummary.HtmlBulletList();
+            if (NightEvents.Count > 0) message += "this is what happened:<br />" + NightEvents.HtmlBulletList();
             else message += "it was completely uneventful.";
             Gmail.MessageAllPlayers(this, message);
+            NightEvents.Clear();
 
             if (!IsGameOver())
             {

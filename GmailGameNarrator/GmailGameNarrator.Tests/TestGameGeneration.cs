@@ -41,7 +41,7 @@ namespace GmailGameNarrator.Tests
             int totalPercent = 0;
             foreach (Team t in game.GetTeamsPlayingUnique())
             {
-                totalPercent += t.MinPercentComposition;
+                totalPercent += t.MinPercentage;
             }
             if (totalPercent > 100)
             {
@@ -52,7 +52,7 @@ namespace GmailGameNarrator.Tests
 
         /// <summary>
         /// Validates the following:
-        /// <para />For each team: Percentage of players in this game is greater than <see cref="Team.MinPercentComposition"/>
+        /// <para />For each team: Percentage of players in this game is greater than <see cref="Team.MinPercentage"/>
         /// <para />At least 2 teams are playing.
         /// <para /><see cref="Role.MaxPlayers"/> is not violated.
         /// </summary>
@@ -63,7 +63,7 @@ namespace GmailGameNarrator.Tests
             foreach (Team t in game.GetTeamsPlayingUnique())
             {
                 int teamMembersCount = game.GetCountOfPlayersOnTeam(t);
-                int minMembers = MathX.Percent(game.Players.Count, t.MinPercentComposition);
+                int minMembers = MathX.Percent(game.Players.Count, t.MinPercentage);
                 if (teamMembersCount < minMembers) return false;
             }
             return true;

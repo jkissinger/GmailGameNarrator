@@ -116,7 +116,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Narrator\Actions\Action.cs" />
+    <Compile Include="Narrator\Action.cs" />
     <Compile Include="Narrator\FlavorText.cs" />
     <Compile Include="Narrator\Game.cs" />
     <Compile Include="Narrator\GameX.cs" />
@@ -135,7 +135,6 @@
     <Compile Include="Narrator\Teams\Team.cs" />
     <Compile Include="Narrator\Teams\AntagonistTeam.cs" />
     <Compile Include="Narrator\Teams\SheepleTeam.cs" />
-    <Compile Include="Narrator\Actions\Vote.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>

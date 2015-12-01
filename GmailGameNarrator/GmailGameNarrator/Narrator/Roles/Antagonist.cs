@@ -16,18 +16,19 @@ namespace GmailGameNarrator.Narrator.Roles
             NightActionPriority = 2;
             MaxPercentage = 40;
             Prevalence = 1;
-            IsKiller = true;
+            IsAttacker = true;
             IsInfectionImmune = false;
             Assignable = true;
         }
 
-        public override string DoNightActions(Player player, Game game)
+        public override void PerformNightActions(Player player, Game game)
         {
+            if (!player.IsAlive) return;
             Player nominee = null;
             List<Player> teammates = game.GetLivingPlayersOnMyTeam(player);
             foreach(Player t in teammates)
             {
-                Player newNominee = GetNominee(t, game);
+                Player newNominee = t.MyAction.Target;
                 if (nominee == null) nominee = newNominee;
                 else if (!nominee.Equals(newNominee))
                 {
@@ -36,22 +37,22 @@ namespace GmailGameNarrator.Narrator.Roles
                     game.Summary.AddUniqueEvent(message.li());
                     Gmail.MessagePlayer(player, game, message);
 
-                    return "";
+                    return;
                 }
             }
-            if (nominee.Attack(this, true))
+            if (nominee.Attack(this, true, false))
             {
                 string msg = game.CycleTitle + " - The " + Team.Name.b() + " cast out " + nominee.Name.b();
                 game.Summary.AddUniqueEvent(msg.li());
                 Gmail.MessagePlayer(player, game, msg);
-                return nominee.Name.b() + " was caught in a house fire. Their burnt body was found near the stove, making popcorn. Grease fires are " + "so".b() + " dangerous.";
+                game.NightEvents.Add(nominee.Name.b() + " was caught in a house fire. Their burnt body was found near the stove, making popcorn. Grease fires are " + "so".b() + " dangerous.");
             }
             else
             {
                 string msg = game.CycleTitle + " - The " + Team.Name.b() + " cast out " + nominee.Name.b() + " but they survived.";
                 game.Summary.AddUniqueEvent(msg.li());
                 Gmail.MessagePlayer(player, game, msg);
-                return nominee.Name.b() + "'s house burnt down. But somehow they survived!";
+                game.NightEvents.Add(nominee.Name.b() + "'s house burnt down. But somehow they survived!");
             }
         }
 
@@ -60,33 +61,17 @@ namespace GmailGameNarrator.Narrator.Roles
             List<string> nominations = new List<string>();
             foreach (Player teammate in teammates)
             {
-                Player newNominee2 = GetNominee(teammate, game);
+                Player newNominee2 = teammate.MyAction.Target;
                 nominations.Add(teammate.Name.b() + " voted for: " + newNominee2.Name.b());
             }
             return nominations;
         }
 
-        private Player GetNominee(Player player, Game game)
+        public override string AddAction(Player player, Action action, Game game)
         {
-            string nomineeName = player.Actions[0].Parameter;
-            Player newNominee = game.GetPlayer(nomineeName, "");
-            return newNominee;
-        }
-
-        //TODO Move most of this functionality (all of it?) to role base class
-        public override string ValidateAction(Player player, Action action, Game game)
-        {
-            string nomineeName = action.Parameter;
-            Player nominee = game.GetPlayer(nomineeName, "");
-            if (nominee == null) return nomineeName.b() + " is not a valid player in " + game.Title;
-            else if (nominee.Team.Equals(player.Team)) return "You cannot vote for " + nomineeName.b() + ".  They are on your team!";
-            else if (!nominee.IsAlive) return "Vote rejected. " + nomineeName.b() + " is already dead!";
-            else
-            {
-                Gmail.MessagePlayer(player, game, "Registered your " + player.Role.Name.b() + " vote for " + nomineeName.b() + ".");
-                //TODO Actually add the action here
-            }
-            return "";
+            Player nominee = action.Target;
+            if (nominee != null && nominee.Team.Equals(player.Team)) return "You cannot vote for " + nominee.Name.b() + ".  They are on your team!";
+            return base.AddAction(player, action, game);
         }
     }
 }

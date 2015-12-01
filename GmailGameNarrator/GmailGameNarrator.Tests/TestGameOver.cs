@@ -42,7 +42,7 @@ namespace GmailGameNarrator.Tests
             {
                 if (players[i].IsAlive)
                 {
-                    players[i].Attack(null, true);
+                    players[i].Attack(null, true, true);
                     return;
                 }
             }

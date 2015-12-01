@@ -32,11 +32,7 @@ namespace GmailGameNarrator.Narrator
                     if (player.IsAlive)
                     {
                         livingState = " - <b>Alive</b>";
-                        if (game.ActiveCycle == Game.Cycle.Day && player.Vote == null)
-                        {
-                            cycleStatus = " - <b><i>Waiting On Action</i></b>";
-                        }
-                        else if (game.ActiveCycle == Game.Cycle.Night && player.Actions.Count == 0)
+                        if (player.MyAction == null)
                         {
                             cycleStatus = " - <b><i>Waiting On Action</i></b>";
                         }
